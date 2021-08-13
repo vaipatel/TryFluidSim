@@ -11,16 +11,13 @@ CONFIG += c++11
 SOURCES += \
     FluidSimWindow.cpp \
     OpenGLWindow.cpp \
-    main.cpp \
-    MainWindow.cpp
+    main.cpp
 
 HEADERS += \
     FluidSimWindow.h \
-    MainWindow.h \
     OpenGLWindow.h
 
-FORMS += \
-    MainWindow.ui
+FORMS +=
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
