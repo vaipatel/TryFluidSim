@@ -160,13 +160,13 @@ void FluidSimWindow::render()
 
     float quadVertices[] = {
         // positions   // texCoords
-        -1.0f,  1.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f,  0.0f, 0.0f,
-         1.0f, -1.0f,  1.0f, 0.0f,
+        -1.0f/2,  1.0f/2,  0.0f, 1.0f,
+        -1.0f/2, -1.0f/2,  0.0f, 0.0f,
+         1.0f/2, -1.0f/2,  1.0f, 0.0f,
 
-        -1.0f,  1.0f,  0.0f, 1.0f,
-         1.0f, -1.0f,  1.0f, 0.0f,
-         1.0f,  1.0f,  1.0f, 1.0f
+        -1.0f/2,  1.0f/2,  0.0f, 1.0f,
+         1.0f/2, -1.0f/2,  1.0f, 0.0f,
+         1.0f/2,  1.0f/2,  1.0f, 1.0f
     };
 
     GLuint quadVerticesbuffer;
