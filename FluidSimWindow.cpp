@@ -82,7 +82,16 @@ void FluidSimWindow::render()
     // Set "renderedTexture" as our colour attachement #0
     GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
     glFramebufferTexture2D(GL_FRAMEBUFFER, DrawBuffers[0], GL_TEXTURE_2D, targetTexture, 0);
-    extraFuncs->glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+
+    //
+    // 4. Also we might apparently need a render buffer because we have no depth
+    //
+    // -----
+    GLuint renderBuffer;
+    glGenRenderbuffers(1, &renderBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, viewWidth, viewHeight);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
 
     // Always check that our framebuffer is ok
     {
@@ -93,6 +102,10 @@ void FluidSimWindow::render()
             exit(1);
         }
     }
+
+    // Set the drawBuffers
+    extraFuncs->glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+
     // Unbind here and give back to default FBO. Is this just for good practice here? I'll have to rebind to targetFBO now.
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
