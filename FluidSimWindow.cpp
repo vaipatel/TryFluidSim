@@ -141,8 +141,8 @@ void FluidSimWindow::render()
 //    m_screenProgram->setUniformValue(static_cast<int>(m_screenTextureHandle), targetTexture);
 
     GLuint quadVAO = 0;
-    glGenVertexArrays(1, &quadVAO);
-    glBindVertexArray(quadVAO);
+    extraFuncs->glGenVertexArrays(1, &quadVAO);
+    extraFuncs->glBindVertexArray(quadVAO);
 
 //    static const GLfloat g_quad_vertex_buffer_data[] = {
 //        -1.0f, -1.0f, 0.0f,
@@ -179,7 +179,7 @@ void FluidSimWindow::render()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), static_cast<void*>(nullptr));
     glEnableVertexAttribArray(1);
 
-    glBindVertexArray(quadVAO);
+    extraFuncs->glBindVertexArray(quadVAO);
     glDisable(GL_DEPTH_TEST);
     glBindTexture(GL_TEXTURE_2D, targetTexture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
