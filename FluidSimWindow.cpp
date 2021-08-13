@@ -22,14 +22,15 @@ void FluidSimWindow::initialize()
     m_matrixUniform = static_cast<GLuint>(m_targetFBOProgram->uniformLocation("matrix"));
 
     m_screenProgram = new QOpenGLShaderProgram(this);
-    m_screenProgram->addShaderFromSourceCode(QOpenGLShader::Vertex, screenVertexShaderSource);
-    m_screenProgram->addShaderFromSourceCode(QOpenGLShader::Fragment, screenFragmentShaderSource);
-    bool canLinkScreenProg = m_screenProgram->link();
+    bool canLinkScreenProg = m_screenProgram->addShaderFromSourceCode(QOpenGLShader::Vertex, screenVertexShaderSource);
+    canLinkScreenProg &= m_screenProgram->addShaderFromSourceCode(QOpenGLShader::Fragment, screenFragmentShaderSource);
+    canLinkScreenProg &= m_screenProgram->link();
     if ( !canLinkScreenProg )
     {
         exit(1);
     }
-    m_screenTextureHandle = static_cast<GLuint>(m_screenProgram->uniformLocation("screenTexture"));
+    m_screenTextureLoc = static_cast<GLuint>(m_screenProgram->uniformLocation("screenTexture"));
+    assert(m_screenTextureLoc != -1);
 }
 
 void FluidSimWindow::render()
@@ -65,10 +66,11 @@ void FluidSimWindow::render()
     glGenTextures(1, &targetTexture);
 
     // "Bind" the newly created texture : all future texture functions will modify this texture
+    glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D, targetTexture);
 
     // Give an empty image to OpenGL ( the last nullptr )
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewWidth, viewHeight, 0,GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewWidth, viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
     // Poor filtering. Needed !
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -116,8 +118,10 @@ void FluidSimWindow::render()
     // first pass
     glBindFramebuffer(GL_FRAMEBUFFER, targetFBO);
     glClearColor(1.f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+    glClear(GL_COLOR_BUFFER_BIT );//| GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
 //    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_2D);
+
     DrawTargetFBO();
 
     //
@@ -130,7 +134,6 @@ void FluidSimWindow::render()
     glClear(GL_COLOR_BUFFER_BIT);
     glViewport(0, 0, viewWidth, viewHeight);
 
-
     bool couldBindShader = m_screenProgram->bind();
     if ( !couldBindShader )
     {
@@ -138,7 +141,9 @@ void FluidSimWindow::render()
         exit(1);
     }
 
-//    m_screenProgram->setUniformValue(static_cast<int>(m_screenTextureHandle), targetTexture);
+    m_screenProgram->setUniformValue(static_cast<int>(m_screenTextureLoc), 0);
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, targetTexture);
 
     GLuint quadVAO = 0;
     extraFuncs->glGenVertexArrays(1, &quadVAO);
@@ -181,12 +186,12 @@ void FluidSimWindow::render()
 
     extraFuncs->glBindVertexArray(quadVAO);
     glDisable(GL_DEPTH_TEST);
-    glBindTexture(GL_TEXTURE_2D, targetTexture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     m_screenProgram->release();
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
+
     glDeleteFramebuffers(1, &targetFBO);
 
     ++m_frame;
