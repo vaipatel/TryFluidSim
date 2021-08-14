@@ -41,11 +41,32 @@ void FluidSimWindow::initialize()
     SetupTriangle();
 }
 
+///
+/// \brief FluidSimWindow::DrawScreenQuad
+/// \param _targetTextureHandle - Handle to texture that is to be used
+///
+void FluidSimWindow::DrawScreenQuad(GLuint _targetTextureHandle)
+{
+    QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
+
+    bool couldBindShader = m_screenProgram->bind();
+    if ( !couldBindShader )
+    {
+        qDebug() << "VAIVAI" << "Could not bind screen shader";
+        exit(1);
+    }
+
+    m_screenProgram->setUniformValue(static_cast<int>(m_screenTextureLoc), 0);
+    extraFuncs->glBindVertexArray(m_quadVAO);
+//    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, _targetTextureHandle);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    m_screenProgram->release();
+}
+
 void FluidSimWindow::render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-
-    QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
 
     QPair<int, int> viewWidthAndHeight = CalcViewPortWidthHeight();
     GLsizei viewWidth = viewWidthAndHeight.first;
@@ -76,22 +97,7 @@ void FluidSimWindow::render()
     glClear(GL_COLOR_BUFFER_BIT);
     glViewport(0, 0, viewWidth, viewHeight);
 
-    bool couldBindShader = m_screenProgram->bind();
-    if ( !couldBindShader )
-    {
-        qDebug() << "VAIVAI" << "Could not bind screen shader";
-        exit(1);
-    }
-
-    m_screenProgram->setUniformValue(static_cast<int>(m_screenTextureLoc), 0);
-    extraFuncs->glBindVertexArray(m_quadVAO);
-//    glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, m_targetTexture);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    m_screenProgram->release();
-//    glDisableVertexAttribArray(0);
-//    glDisableVertexAttribArray(1);
+    DrawScreenQuad(m_targetTexture);
 
     ++m_frame;
 }
@@ -102,6 +108,8 @@ void FluidSimWindow::cleanup()
     glDeleteFramebuffers(1, &m_targetFBO);
     extraFuncs->glDeleteVertexArrays(1, &m_quadVAO);
     extraFuncs->glDeleteBuffers(1, &m_quadVBO);
+    extraFuncs->glDeleteVertexArrays(1, &m_triVAO);
+    extraFuncs->glDeleteBuffers(1, &m_triVBO);
 }
 
 void FluidSimWindow::DrawRotatingTriangle()

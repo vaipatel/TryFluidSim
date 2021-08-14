@@ -83,6 +83,7 @@ private:
     void SetupTriangle();
     void SetupScreenQuad();
     QPair<int, int> CalcViewPortWidthHeight();
+    void DrawScreenQuad(GLuint _targetTextureHandle);
 };
 
 #endif // FLUIDSIMWINDOW_H
