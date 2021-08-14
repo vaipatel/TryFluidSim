@@ -2,6 +2,7 @@
 #define FLUIDSIMWINDOW_H
 
 #include "OpenGLWindow.h"
+#include <QPair>
 
 class QOpenGLShaderProgram;
 class QWindow;
@@ -10,9 +11,11 @@ class FluidSimWindow : public OpenGLWindow
 {
 public:
     FluidSimWindow(QWindow* _parent = nullptr);
+    ~FluidSimWindow() override;
 
     void initialize() override;
     void render() override;
+    void cleanup() override;
 
 private:
     GLuint m_posAttr;
@@ -64,12 +67,22 @@ private:
             "    FragColor = texture(screenTexture, TexCoords);//vec4(TexCoords.x, TexCoords.y, 0, 1);\n"
             "}";
 
-    void DrawTargetFBO();
+    void DrawRotatingTriangle();
 
-    QOpenGLShaderProgram* m_targetFBOProgram; //!< Need one of these for each step of fluid sim
+    QOpenGLShaderProgram* m_triangleProgram; //!< Need one of these for each step of fluid sim
     QOpenGLShaderProgram* m_screenProgram;
-    uint m_frame;
+    uint m_frame = 0;
+    GLuint m_targetFBO = 0;
+    GLuint m_targetTexture = 0;
+    GLuint m_triVAO = 0;
+    GLuint m_triVBO = 0;
+    GLuint m_quadVAO = 0;
+    GLuint m_quadVBO = 0;
 
+    void SetupRenderTargetFBO();
+    void SetupTriangle();
+    void SetupScreenQuad();
+    QPair<int, int> CalcViewPortWidthHeight();
 };
 
 #endif // FLUIDSIMWINDOW_H

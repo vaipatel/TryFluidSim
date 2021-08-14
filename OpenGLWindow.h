@@ -21,6 +21,7 @@ public:
     virtual void render();
 
     virtual void initialize();
+    virtual void cleanup() {}
 
     void setAnimating(bool _animating);
 
@@ -32,6 +33,8 @@ protected:
     bool event(QEvent *_event) override;
 
     void exposeEvent(QExposeEvent *_event) override;
+
+    void checkGLError();
 
 private:
     bool m_animating;
