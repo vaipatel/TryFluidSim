@@ -80,9 +80,9 @@ void FluidSimWindow::render()
     // -----
     // first pass
     glBindFramebuffer(GL_FRAMEBUFFER, m_targetFBO);
-//    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);//| GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
 
     DrawRotatingTriangle();
 
@@ -124,8 +124,8 @@ void FluidSimWindow::DrawRotatingTriangle()
     GLsizei viewHeight = viewWidthAndHeight.second;
 
     QMatrix4x4 matrix;
-//    matrix.perspective(60.0f, viewWidth/viewHeight, 0.1f, 100.0f);
-//    matrix.translate(0, 0, -4);
+    matrix.perspective(60.0f, viewWidth/viewHeight, 0.1f, 100.0f);
+    matrix.translate(0, 0, -4);
     matrix.rotate(static_cast<float>(100.0 * m_frame / screen()->refreshRate()), 0, 1, 0);
     m_triangleProgram->setUniformValue(static_cast<int>(m_matrixUniform), matrix);
 
