@@ -36,7 +36,7 @@ void FluidSimWindow::initialize()
     m_screenTextureLoc = static_cast<GLuint>(m_screenProgram->uniformLocation("screenTexture"));
     Q_ASSERT(m_screenTextureLoc >= 0); // -1 is bad
 
-    SetupRenderTargetFBO();
+    UpdateViewPortIfNeeded();
     SetupScreenQuad();
     SetupTriangle();
 }
@@ -68,11 +68,8 @@ void FluidSimWindow::render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    QPair<int, int> viewWidthAndHeight = CalcViewPortWidthHeight();
-    GLsizei viewWidth = viewWidthAndHeight.first;
-    GLsizei viewHeight = viewWidthAndHeight.second;
-
-    glViewport(0, 0, viewWidth, viewHeight);
+    // Handle window resizing
+    UpdateViewPortIfNeeded();
 
     //
     // 4. First Pass
@@ -81,7 +78,7 @@ void FluidSimWindow::render()
     // first pass
     glBindFramebuffer(GL_FRAMEBUFFER, m_targetFBO);
     glEnable(GL_DEPTH_TEST);
-    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+    glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
 
     DrawRotatingTriangle();
@@ -95,17 +92,25 @@ void FluidSimWindow::render()
     glDisable(GL_DEPTH_TEST); // Disable depth test so screen space quad is not discarded due to depth test
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    glViewport(0, 0, viewWidth, viewHeight);
 
     DrawScreenQuad(m_targetTexture);
 
     ++m_frame;
 }
 
+void FluidSimWindow::CleanUpRenderTargetFBO()
+{
+    if ( m_targetFBO != 0 )
+    {
+        glDeleteFramebuffers(1, &m_targetFBO);
+        glDeleteTextures(1, &m_targetTexture);
+    }
+}
+
 void FluidSimWindow::cleanup()
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-    glDeleteFramebuffers(1, &m_targetFBO);
+    CleanUpRenderTargetFBO();
     extraFuncs->glDeleteVertexArrays(1, &m_quadVAO);
     extraFuncs->glDeleteBuffers(1, &m_quadVBO);
     extraFuncs->glDeleteVertexArrays(1, &m_triVAO);
@@ -119,12 +124,8 @@ void FluidSimWindow::DrawRotatingTriangle()
     bool couldBindShader = m_triangleProgram->bind();
     Q_ASSERT(couldBindShader);
 
-    QPair<int, int> viewWidthAndHeight = CalcViewPortWidthHeight();
-    GLsizei viewWidth = viewWidthAndHeight.first;
-    GLsizei viewHeight = viewWidthAndHeight.second;
-
     QMatrix4x4 matrix;
-    matrix.perspective(60.0f, viewWidth/viewHeight, 0.1f, 100.0f);
+    matrix.perspective(60.0f, m_viewAspect, 0.1f, 100.0f);
     matrix.translate(0, 0, -4);
     matrix.rotate(static_cast<float>(100.0 * m_frame / screen()->refreshRate()), 0, 1, 0);
     m_triangleProgram->setUniformValue(static_cast<int>(m_matrixUniform), matrix);
@@ -141,10 +142,6 @@ void FluidSimWindow::DrawRotatingTriangle()
 void FluidSimWindow::SetupRenderTargetFBO()
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-
-    QPair<int, int> viewWidthAndHeight = CalcViewPortWidthHeight();
-    GLsizei viewWidth = viewWidthAndHeight.first;
-    GLsizei viewHeight = viewWidthAndHeight.second;
 
     //
     // 1. The framebuffer is our container for our target texture
@@ -163,11 +160,10 @@ void FluidSimWindow::SetupRenderTargetFBO()
     glGenTextures(1, &m_targetTexture);
 
     // "Bind" the newly created texture : all future texture functions will modify this texture
-//    glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D, m_targetTexture);
 
     // Give an empty image to OpenGL ( the last nullptr )
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, viewWidth, viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
     // Poor filtering. Needed !
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -236,16 +232,32 @@ void FluidSimWindow::SetupScreenQuad()
     extraFuncs->glGenVertexArrays(1, &m_quadVAO);
     extraFuncs->glBindVertexArray(m_quadVAO);
 
+    // Set the quad vertex positions and tex coords.
+#if 1
     float quadVertices[] = {
         // positions   // texCoords
-        -1.0f*0.9f,  1.0f*0.9f,  0.0f*0.9f, 1.0f,
-        -1.0f*0.9f, -1.0f*0.9f,  0.0f*0.9f, 0.0f,
-         1.0f*0.9f, -1.0f*0.9f,  1.0f*0.9f, 0.0f,
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
 
-        -1.0f*0.9f,  1.0f*0.9f,  0.0f*0.9f, 1.0f,
-         1.0f*0.9f, -1.0f*0.9f,  1.0f*0.9f, 0.0f,
-         1.0f*0.9f,  1.0f*0.9f,  1.0f*0.9f, 1.0f
+        -1.0f,  1.0f,  0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f
     };
+#else
+    // For understanding purposes: Only draw to top half of screen (notice our bottom-most y coord is 0, not -1)
+    //                             This might necessitate applying a factor of 2(or 0.5?) to the aspect ratio else triangle looks too fat.
+    float quadVertices[] = {
+        // positions   // texCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f,  0.0f,  0.0f, 0.0f,
+         1.0f,  0.0f,  1.0f, 0.0f,
+
+        -1.0f,  1.0f,  0.0f, 1.0f,
+         1.0f,  0.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f
+    };
+#endif
 
     glGenBuffers(1, &m_quadVBO);
     glBindBuffer(GL_ARRAY_BUFFER, m_quadVBO);
@@ -256,7 +268,7 @@ void FluidSimWindow::SetupScreenQuad()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void*>(2 * sizeof(float)));
 }
 
-QPair<int, int> FluidSimWindow::CalcViewPortWidthHeight()
+QPair<int, int> FluidSimWindow::CalcViewPortWidthHeight() const
 {
     const GLsizei retinaScale = static_cast<GLsizei>(devicePixelRatio());
 
@@ -265,4 +277,30 @@ QPair<int, int> FluidSimWindow::CalcViewPortWidthHeight()
     GLsizei viewHeight = height() * retinaScale;
 
     return {viewWidth, viewHeight};
+}
+
+///
+/// \brief Updates the viewport width and height if necessary. If updated, this function additionally
+///        updates the aspect ratio value, calls glViewport() and recreates the render target FBOs.
+///
+void FluidSimWindow::UpdateViewPortIfNeeded()
+{
+    QPair<int, int> viewWidthAndHeight = CalcViewPortWidthHeight();
+    int viewWidth = viewWidthAndHeight.first;
+    int viewHeight = viewWidthAndHeight.second;
+
+    if ( viewWidth != m_viewWidth || viewHeight != m_viewHeight )
+    {
+        // Update width, height and aspect
+        m_viewWidth = viewWidth;
+        m_viewHeight = viewHeight;
+        m_viewAspect = static_cast<float>(m_viewWidth)/static_cast<float>(m_viewHeight);
+
+        // Update viewport
+        glViewport(0, 0, m_viewWidth, m_viewHeight);
+
+        // Update render targets FBOs, textures
+        CleanUpRenderTargetFBO();
+        SetupRenderTargetFBO();
+    }
 }

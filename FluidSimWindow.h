@@ -78,12 +78,17 @@ private:
     GLuint m_triVBO = 0;
     GLuint m_quadVAO = 0;
     GLuint m_quadVBO = 0;
+    int m_viewWidth = 0;
+    int m_viewHeight = 0;
+    float m_viewAspect = 0;
 
     void SetupRenderTargetFBO();
     void SetupTriangle();
     void SetupScreenQuad();
-    QPair<int, int> CalcViewPortWidthHeight();
     void DrawScreenQuad(GLuint _targetTextureHandle);
+    void CleanUpRenderTargetFBO();
+    QPair<int, int> CalcViewPortWidthHeight() const;
+    void UpdateViewPortIfNeeded();
 };
 
 #endif // FLUIDSIMWINDOW_H
