@@ -19,17 +19,41 @@ void FluidSimWindow::initialize()
 {
     glEnable(GL_DEPTH_TEST);
 
-    m_triangleProgram = new QOpenGLShaderProgram(this);
-    m_triangleProgram->addShaderFromSourceCode(QOpenGLShader::Vertex, targetFBOVertexShaderSource);
-    m_triangleProgram->addShaderFromSourceCode(QOpenGLShader::Fragment, targetFBOFragmentShaderSource);
-    m_triangleProgram->link();
-    m_posAttr = static_cast<GLuint>(m_triangleProgram->attributeLocation("posAttr"));
-    m_colAttr = static_cast<GLuint>(m_triangleProgram->attributeLocation("colAttr"));
-    m_matrixUniform = static_cast<GLuint>(m_triangleProgram->uniformLocation("matrix"));
+    {
+        m_triangleProgram = new QOpenGLShaderProgram(this);
+        bool canSetupProg = m_triangleProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, m_sampleTriangleVertShaderFileName);
+        canSetupProg &= m_triangleProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, m_sampleTriangleFragShaderFileName);
+        canSetupProg &= m_triangleProgram->link();
+        QStringList attrNames = {"posAttr", "colAttr"};
+        QVector<GLuint*> attrLocs = {&m_posAttr, &m_colAttr};
+        for (int i = 0; i < attrNames.size(); ++i)
+        {
+            int loc = m_triangleProgram->attributeLocation(attrNames[i]);
+            canSetupProg &= loc > -1;
+            if ( canSetupProg )
+            {
+                *attrLocs[i] = static_cast<GLuint>(loc);
+            }
+        }
+
+        QStringList uniformNames = {"matrix"};
+        QVector<GLuint*> uniformLocs = {&m_matrixUniform};
+        for (int i = 0; i < uniformNames.size(); ++i)
+        {
+            int loc = m_triangleProgram->uniformLocation(uniformNames[i]);
+            canSetupProg &= loc > -1;
+            if ( canSetupProg )
+            {
+                *uniformLocs[i] = static_cast<GLuint>(loc);
+            }
+        }
+
+        Q_ASSERT(canSetupProg);
+    }
 
     m_screenProgram = new QOpenGLShaderProgram(this);
-    bool canLinkScreenProg = m_screenProgram->addShaderFromSourceCode(QOpenGLShader::Vertex, screenVertexShaderSource);
-    canLinkScreenProg &= m_screenProgram->addShaderFromSourceCode(QOpenGLShader::Fragment, screenFragmentShaderSource);
+    bool canLinkScreenProg = m_screenProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, m_blitToScreenQuadVertShaderFileName);
+    canLinkScreenProg &= m_screenProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, m_blitToScreenQuadFragShaderFileName);
     canLinkScreenProg &= m_screenProgram->link();
     Q_ASSERT(canLinkScreenProg);
 
@@ -37,6 +61,7 @@ void FluidSimWindow::initialize()
     Q_ASSERT(m_screenTextureLoc >= 0); // -1 is bad
 
     UpdateViewPortIfNeeded();
+    SetupRenderTargetFBO();
     SetupScreenQuad();
     SetupTriangle();
 }
@@ -299,8 +324,12 @@ void FluidSimWindow::UpdateViewPortIfNeeded()
         // Update viewport
         glViewport(0, 0, m_viewWidth, m_viewHeight);
 
-        // Update render targets FBOs, textures
-        CleanUpRenderTargetFBO();
-        SetupRenderTargetFBO();
+        // Update textures
+        if ( m_targetTexture )
+        {
+            glBindTexture(GL_TEXTURE_2D, m_targetTexture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
     }
 }
