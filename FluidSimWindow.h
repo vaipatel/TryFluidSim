@@ -2,9 +2,10 @@
 #define FLUIDSIMWINDOW_H
 
 #include "OpenGLWindow.h"
+
 #include <QPair>
 
-class QOpenGLShaderProgram;
+class ShaderProgram;
 class QWindow;
 
 class FluidSimWindow : public OpenGLWindow
@@ -20,7 +21,6 @@ public:
 private:
     GLuint m_posAttr;
     GLuint m_colAttr;
-    GLuint m_matrixUniform;
 
     const QString m_sampleTriangleVertShaderFileName = ":/Resources/Shaders/SampleTriangle.vert";
     const QString m_sampleTriangleFragShaderFileName = ":/Resources/Shaders/SampleTriangle.frag";
@@ -34,8 +34,8 @@ private:
 
     void DrawRotatingTriangle();
 
-    QOpenGLShaderProgram* m_triangleProgram; //!< Need one of these for each step of fluid sim
-    QOpenGLShaderProgram* m_screenProgram;
+    ShaderProgram* m_triangleProgram; //!< Need one of these for each step of fluid sim
+    ShaderProgram* m_screenProgram;
     uint m_frame = 0;
     GLuint m_targetFBO = 0;
     GLuint m_targetTexture = 0;

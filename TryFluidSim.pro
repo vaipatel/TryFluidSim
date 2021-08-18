@@ -11,11 +11,13 @@ CONFIG += c++11
 SOURCES += \
     FluidSimWindow.cpp \
     OpenGLWindow.cpp \
+    ShaderProgram.cpp \
     main.cpp
 
 HEADERS += \
     FluidSimWindow.h \
-    OpenGLWindow.h
+    OpenGLWindow.h \
+    ShaderProgram.h
 
 FORMS +=
 
@@ -26,7 +28,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
     Resources/Shaders/SampleTriangle.vert \
-    Resources/Shaders/SampleTriangle.frag
+    Resources/Shaders/SampleTriangle.frag \
+    Resources/Shaders/BlitToScreenQuad.vert \
+    Resources/Shaders/BlitToScreenQuad.frag
 
 RESOURCES += \
     Resources.qrc

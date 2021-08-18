@@ -1,12 +1,12 @@
 #include "FluidSimWindow.h"
+#include "ShaderProgram.h"
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLShaderProgram>
 #include <QScreen>
 #include <QWindow>
 #include <QtGlobal>
 
-FluidSimWindow::FluidSimWindow(QWindow* _parent) : OpenGLWindow(_parent),
-    m_triangleProgram(nullptr)
+FluidSimWindow::FluidSimWindow(QWindow* _parent) : OpenGLWindow(_parent)
 {
 
 }
@@ -19,46 +19,10 @@ void FluidSimWindow::initialize()
 {
     glEnable(GL_DEPTH_TEST);
 
-    {
-        m_triangleProgram = new QOpenGLShaderProgram(this);
-        bool canSetupProg = m_triangleProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, m_sampleTriangleVertShaderFileName);
-        canSetupProg &= m_triangleProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, m_sampleTriangleFragShaderFileName);
-        canSetupProg &= m_triangleProgram->link();
-        QStringList attrNames = {"posAttr", "colAttr"};
-        QVector<GLuint*> attrLocs = {&m_posAttr, &m_colAttr};
-        for (int i = 0; i < attrNames.size(); ++i)
-        {
-            int loc = m_triangleProgram->attributeLocation(attrNames[i]);
-            canSetupProg &= loc > -1;
-            if ( canSetupProg )
-            {
-                *attrLocs[i] = static_cast<GLuint>(loc);
-            }
-        }
-
-        QStringList uniformNames = {"matrix"};
-        QVector<GLuint*> uniformLocs = {&m_matrixUniform};
-        for (int i = 0; i < uniformNames.size(); ++i)
-        {
-            int loc = m_triangleProgram->uniformLocation(uniformNames[i]);
-            canSetupProg &= loc > -1;
-            if ( canSetupProg )
-            {
-                *uniformLocs[i] = static_cast<GLuint>(loc);
-            }
-        }
-
-        Q_ASSERT(canSetupProg);
-    }
-
-    m_screenProgram = new QOpenGLShaderProgram(this);
-    bool canLinkScreenProg = m_screenProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, m_blitToScreenQuadVertShaderFileName);
-    canLinkScreenProg &= m_screenProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, m_blitToScreenQuadFragShaderFileName);
-    canLinkScreenProg &= m_screenProgram->link();
-    Q_ASSERT(canLinkScreenProg);
-
-    m_screenTextureLoc = static_cast<GLuint>(m_screenProgram->uniformLocation("screenTexture"));
-    Q_ASSERT(m_screenTextureLoc >= 0); // -1 is bad
+    m_triangleProgram = new ShaderProgram(m_sampleTriangleVertShaderFileName, m_sampleTriangleFragShaderFileName);
+    m_posAttr = m_triangleProgram->GetAttributeLocation("posAttr");
+    m_colAttr = m_triangleProgram->GetAttributeLocation("colAttr");
+    m_screenProgram = new ShaderProgram(m_blitToScreenQuadVertShaderFileName, m_blitToScreenQuadFragShaderFileName);
 
     UpdateViewPortIfNeeded();
     SetupRenderTargetFBO();
@@ -74,19 +38,15 @@ void FluidSimWindow::DrawScreenQuad(GLuint _targetTextureHandle)
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
 
-    bool couldBindShader = m_screenProgram->bind();
-    if ( !couldBindShader )
-    {
-        qDebug() << "VAIVAI" << "Could not bind screen shader";
-        exit(1);
-    }
+    m_screenProgram->Bind();
 
-    m_screenProgram->setUniformValue(static_cast<int>(m_screenTextureLoc), 0);
+    m_screenProgram->SetUniform("screenTexture", 0);
     extraFuncs->glBindVertexArray(m_quadVAO);
 //    glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D, _targetTextureHandle);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    m_screenProgram->release();
+
+    m_screenProgram->Release();
 }
 
 void FluidSimWindow::render()
@@ -146,20 +106,19 @@ void FluidSimWindow::DrawRotatingTriangle()
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
 
-    bool couldBindShader = m_triangleProgram->bind();
-    Q_ASSERT(couldBindShader);
+    m_triangleProgram->Bind();
 
     QMatrix4x4 matrix;
     matrix.perspective(60.0f, m_viewAspect, 0.1f, 100.0f);
     matrix.translate(0, 0, -4);
     matrix.rotate(static_cast<float>(100.0 * m_frame / screen()->refreshRate()), 0, 1, 0);
-    m_triangleProgram->setUniformValue(static_cast<int>(m_matrixUniform), matrix);
+    m_triangleProgram->SetUniform("matrix", matrix);
 
     extraFuncs->glBindVertexArray(m_triVAO);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
-    m_triangleProgram->release();
+    m_triangleProgram->Release();
 
     extraFuncs->glBindVertexArray(0);
 }
