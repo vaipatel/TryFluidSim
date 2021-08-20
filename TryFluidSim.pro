@@ -12,12 +12,14 @@ SOURCES += \
     FluidSimWindow.cpp \
     OpenGLWindow.cpp \
     ShaderProgram.cpp \
+    TrisObject.cpp \
     main.cpp
 
 HEADERS += \
     FluidSimWindow.h \
     OpenGLWindow.h \
-    ShaderProgram.h
+    ShaderProgram.h \
+    TrisObject.h
 
 FORMS +=
 

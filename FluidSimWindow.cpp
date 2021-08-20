@@ -1,5 +1,6 @@
 #include "FluidSimWindow.h"
 #include "ShaderProgram.h"
+#include "TrisObject.h"
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLShaderProgram>
 #include <QScreen>
@@ -13,6 +14,8 @@ FluidSimWindow::FluidSimWindow(QWindow* _parent) : OpenGLWindow(_parent)
 
 FluidSimWindow::~FluidSimWindow()
 {
+    delete m_tri;
+    delete m_quad;
 }
 
 void FluidSimWindow::initialize()
@@ -20,8 +23,6 @@ void FluidSimWindow::initialize()
     glEnable(GL_DEPTH_TEST);
 
     m_triangleProgram = new ShaderProgram(m_sampleTriangleVertShaderFileName, m_sampleTriangleFragShaderFileName);
-    m_posAttr = m_triangleProgram->GetAttributeLocation("posAttr");
-    m_colAttr = m_triangleProgram->GetAttributeLocation("colAttr");
     m_screenProgram = new ShaderProgram(m_blitToScreenQuadVertShaderFileName, m_blitToScreenQuadFragShaderFileName);
 
     UpdateViewPortIfNeeded();
@@ -36,15 +37,12 @@ void FluidSimWindow::initialize()
 ///
 void FluidSimWindow::DrawScreenQuad(GLuint _targetTextureHandle)
 {
-    QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-
     m_screenProgram->Bind();
-
     m_screenProgram->SetUniform("screenTexture", 0);
-    extraFuncs->glBindVertexArray(m_quadVAO);
-//    glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, _targetTextureHandle);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    //    glActiveTexture(GL_TEXTURE0 + 0);
+        glBindTexture(GL_TEXTURE_2D, _targetTextureHandle);
+
+    m_quad->Draw();
 
     m_screenProgram->Release();
 }
@@ -96,16 +94,13 @@ void FluidSimWindow::cleanup()
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
     CleanUpRenderTargetFBO();
-    extraFuncs->glDeleteVertexArrays(1, &m_quadVAO);
-    extraFuncs->glDeleteBuffers(1, &m_quadVBO);
+    m_quad->CleanUp();
     extraFuncs->glDeleteVertexArrays(1, &m_triVAO);
     extraFuncs->glDeleteBuffers(1, &m_triVBO);
 }
 
 void FluidSimWindow::DrawRotatingTriangle()
 {
-    QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-
     m_triangleProgram->Bind();
 
     QMatrix4x4 matrix;
@@ -114,13 +109,9 @@ void FluidSimWindow::DrawRotatingTriangle()
     matrix.rotate(static_cast<float>(100.0 * m_frame / screen()->refreshRate()), 0, 1, 0);
     m_triangleProgram->SetUniform("matrix", matrix);
 
-    extraFuncs->glBindVertexArray(m_triVAO);
-
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    m_tri->Draw();
 
     m_triangleProgram->Release();
-
-    extraFuncs->glBindVertexArray(0);
 }
 
 void FluidSimWindow::SetupRenderTargetFBO()
@@ -190,66 +181,33 @@ void FluidSimWindow::SetupRenderTargetFBO()
 
 void FluidSimWindow::SetupTriangle()
 {
-    QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-    extraFuncs->glGenVertexArrays(1, &m_triVAO);
-    extraFuncs->glBindVertexArray(m_triVAO);
-
-    float triVertices[] = {
-        // verts      // colors
-        0.0f, 0.707f, 1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-        0.5f, -0.5f,  0.0f, 0.0f, 1.0f
+    std::vector<Tri> triVertices = {
+             // positions          // colors                 // texCoords
+        {
+            {{ 0.0f,  0.707f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+            {{-0.5f, -0.5f,   0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+            {{ 0.5f, -0.5f,   0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}, {0.0f, 0.0f}}
+        }
     };
-
-    glGenBuffers(1, &m_triVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_triVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(triVertices), &triVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(m_posAttr);
-    glVertexAttribPointer(m_posAttr, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
-    glEnableVertexAttribArray(m_colAttr);
-    glVertexAttribPointer(m_colAttr, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(2 * sizeof(float)));
+    m_tri = new TrisObject(triVertices);
 }
 
 void FluidSimWindow::SetupScreenQuad()
 {
-    QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-    extraFuncs->glGenVertexArrays(1, &m_quadVAO);
-    extraFuncs->glBindVertexArray(m_quadVAO);
-
-    // Set the quad vertex positions and tex coords.
-#if 1
-    float quadVertices[] = {
-        // positions   // texCoords
-        -1.0f,  1.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f,  0.0f, 0.0f,
-         1.0f, -1.0f,  1.0f, 0.0f,
-
-        -1.0f,  1.0f,  0.0f, 1.0f,
-         1.0f, -1.0f,  1.0f, 0.0f,
-         1.0f,  1.0f,  1.0f, 1.0f
+    std::vector<Tri> quadVertices = {
+             // positions          // colors                 // texCoords
+        {
+            {{-1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
+            {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+            {{ 1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
+        },
+        {
+            {{-1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
+            {{ 1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
+        }
     };
-#else
-    // For understanding purposes: Only draw to top half of screen (notice our bottom-most y coord is 0, not -1)
-    //                             This might necessitate applying a factor of 2(or 0.5?) to the aspect ratio else triangle looks too fat.
-    float quadVertices[] = {
-        // positions   // texCoords
-        -1.0f,  1.0f,  0.0f, 1.0f,
-        -1.0f,  0.0f,  0.0f, 0.0f,
-         1.0f,  0.0f,  1.0f, 0.0f,
-
-        -1.0f,  1.0f,  0.0f, 1.0f,
-         1.0f,  0.0f,  1.0f, 0.0f,
-         1.0f,  1.0f,  1.0f, 1.0f
-    };
-#endif
-
-    glGenBuffers(1, &m_quadVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void*>(0));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void*>(2 * sizeof(float)));
+    m_quad = new TrisObject(quadVertices);
 }
 
 QPair<int, int> FluidSimWindow::CalcViewPortWidthHeight() const

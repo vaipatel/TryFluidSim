@@ -1,6 +1,7 @@
 #ifndef SHADERPROGRAM_H
 #define SHADERPROGRAM_H
 
+#include <QMap>
 #include <QString>
 
 class QMatrix4x4;
@@ -9,6 +10,15 @@ class QOpenGLShaderProgram;
 class ShaderProgram
 {
 public:
+    enum enVSAttrIdx : uint
+    {
+        VS_POS = 0,
+        VS_COLOR,
+        VS_TEXCOORDS
+    };
+
+    static const QMap<enVSAttrIdx, QString> s_VS_ATTR_NAMES;
+
     ShaderProgram(const QString& _vertexShaderFileName, const QString& _fragmentShaderFileName);
     ~ShaderProgram();
 

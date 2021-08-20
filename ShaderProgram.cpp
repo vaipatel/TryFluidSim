@@ -2,12 +2,25 @@
 #include <QMatrix4x4>
 #include <QOpenGLShaderProgram>
 
+const QMap<ShaderProgram::enVSAttrIdx, QString> ShaderProgram::s_VS_ATTR_NAMES =
+{
+    {VS_POS, "VertexPosition"},
+    {VS_COLOR, "VertexColor"},
+    {VS_TEXCOORDS, "VertexTexCoords"}
+};
+
 ShaderProgram::ShaderProgram(const QString& _vertexShaderFileName, const QString& _fragmentShaderFileName)
 {
     m_program = new QOpenGLShaderProgram;
+
     bool canAddShaders = m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, _vertexShaderFileName);
     canAddShaders &= m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, _fragmentShaderFileName);
     Q_ASSERT(canAddShaders);
+
+    foreach (enVSAttrIdx attrIdx, s_VS_ATTR_NAMES.keys())
+    {
+        glBindAttribLocation(m_program->programId(), attrIdx, s_VS_ATTR_NAMES[attrIdx].toUtf8().constData());
+    }
 
     bool canLink = m_program->link();
     Q_ASSERT(canLink);

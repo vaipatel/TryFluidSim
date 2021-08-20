@@ -6,6 +6,7 @@
 #include <QPair>
 
 class ShaderProgram;
+class TrisObject;
 class QWindow;
 
 class FluidSimWindow : public OpenGLWindow
@@ -41,8 +42,8 @@ private:
     GLuint m_targetTexture = 0;
     GLuint m_triVAO = 0;
     GLuint m_triVBO = 0;
-    GLuint m_quadVAO = 0;
-    GLuint m_quadVBO = 0;
+    TrisObject* m_tri = nullptr;
+    TrisObject* m_quad = nullptr;
     int m_viewWidth = 0;
     int m_viewHeight = 0;
     float m_viewAspect = 0;

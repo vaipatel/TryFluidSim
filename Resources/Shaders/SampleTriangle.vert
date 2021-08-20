@@ -1,12 +1,12 @@
 #version 330 core
 
-in highp vec4 posAttr;
-in lowp vec4 colAttr;
+in highp vec4 VertexPosition;
+in lowp vec4 VertexColor;
 out lowp vec4 col;
 uniform highp mat4 matrix;
 
 void main()
 {
-   col = colAttr;
-   gl_Position = matrix * posAttr;
+   col = VertexColor;
+   gl_Position = matrix * VertexPosition;
 }
