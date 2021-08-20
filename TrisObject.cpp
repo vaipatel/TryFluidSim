@@ -11,23 +11,25 @@ TrisObject::TrisObject(const std::vector<Tri>& _tris) :
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
     extraFuncs->glGenVertexArrays(1, &m_vao);
     extraFuncs->glBindVertexArray(m_vao);
-    glGenBuffers(1, &m_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-    glBufferData(GL_ARRAY_BUFFER, _tris.size() * sizeof(Tri), _tris.data(), GL_STATIC_DRAW);
-    size_t numComponents = 3;
-    size_t offset = 0;
-    glEnableVertexAttribArray(ShaderProgram::VS_POS);
-    glVertexAttribPointer(ShaderProgram::VS_POS, numComponents, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offset));
+    extraFuncs->glGenBuffers(1, &m_vbo);
+    extraFuncs->glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    extraFuncs->glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(_tris.size() * sizeof(Tri)), _tris.data(), GL_STATIC_DRAW);
 
-    offset += numComponents * sizeof(float);
+    GLint sizeOfFloat = static_cast<GLint>(sizeof(float));
+    GLint numComponents = 3;
+    GLint offset = 0;
+    extraFuncs->glEnableVertexAttribArray(ShaderProgram::VS_POS);
+    extraFuncs->glVertexAttribPointer(ShaderProgram::VS_POS, numComponents, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offset));
+
+    offset += numComponents * sizeOfFloat;
     numComponents = 4;
-    glEnableVertexAttribArray(ShaderProgram::VS_COLOR);
-    glVertexAttribPointer(ShaderProgram::VS_COLOR, numComponents, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offset));
+    extraFuncs->glEnableVertexAttribArray(ShaderProgram::VS_COLOR);
+    extraFuncs->glVertexAttribPointer(ShaderProgram::VS_COLOR, numComponents, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offset));
 
-    offset += numComponents * sizeof(float);
+    offset += numComponents * sizeOfFloat;
     numComponents = 2;
-    glEnableVertexAttribArray(ShaderProgram::VS_TEXCOORDS);
-    glVertexAttribPointer(ShaderProgram::VS_TEXCOORDS, numComponents, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offset));
+    extraFuncs->glEnableVertexAttribArray(ShaderProgram::VS_TEXCOORDS);
+    extraFuncs->glVertexAttribPointer(ShaderProgram::VS_TEXCOORDS, numComponents, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offset));
 
     extraFuncs->glBindVertexArray(0);
 }
@@ -44,7 +46,8 @@ void TrisObject::Draw()
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
     extraFuncs->glBindVertexArray(m_vao);
-    glDrawArrays(GL_TRIANGLES, 0, m_numTris*3);
+    GLsizei numVerts = static_cast<GLsizei>(m_numTris) * 3;
+    extraFuncs->glDrawArrays(GL_TRIANGLES, 0, numVerts);
     extraFuncs->glBindVertexArray(0);
 }
 

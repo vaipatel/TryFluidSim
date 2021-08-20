@@ -40,8 +40,6 @@ private:
     uint m_frame = 0;
     GLuint m_targetFBO = 0;
     GLuint m_targetTexture = 0;
-    GLuint m_triVAO = 0;
-    GLuint m_triVBO = 0;
     TrisObject* m_tri = nullptr;
     TrisObject* m_quad = nullptr;
     int m_viewWidth = 0;

@@ -19,7 +19,7 @@ ShaderProgram::ShaderProgram(const QString& _vertexShaderFileName, const QString
 
     foreach (enVSAttrIdx attrIdx, s_VS_ATTR_NAMES.keys())
     {
-        glBindAttribLocation(m_program->programId(), attrIdx, s_VS_ATTR_NAMES[attrIdx].toUtf8().constData());
+        m_program->bindAttributeLocation(s_VS_ATTR_NAMES[attrIdx].toUtf8().constData(), static_cast<int>(attrIdx));
     }
 
     bool canLink = m_program->link();

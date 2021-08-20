@@ -92,11 +92,9 @@ void FluidSimWindow::CleanUpRenderTargetFBO()
 
 void FluidSimWindow::cleanup()
 {
-    QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
     CleanUpRenderTargetFBO();
     m_quad->CleanUp();
-    extraFuncs->glDeleteVertexArrays(1, &m_triVAO);
-    extraFuncs->glDeleteBuffers(1, &m_triVBO);
+    m_tri->CleanUp();
 }
 
 void FluidSimWindow::DrawRotatingTriangle()
