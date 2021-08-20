@@ -1,6 +1,7 @@
 #include "TrisObject.h"
 #include "ShaderProgram.h"
 #include <QDebug>
+#include <QList>
 #include <QOpenGLExtraFunctions>
 
 TrisObject::TrisObject(const std::vector<Tri>& _tris) :
@@ -15,21 +16,16 @@ TrisObject::TrisObject(const std::vector<Tri>& _tris) :
     extraFuncs->glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
     extraFuncs->glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(_tris.size() * sizeof(Tri)), _tris.data(), GL_STATIC_DRAW);
 
-    GLint sizeOfFloat = static_cast<GLint>(sizeof(float));
-    GLint numComponents = 3;
-    GLint offset = 0;
-    extraFuncs->glEnableVertexAttribArray(ShaderProgram::VS_POS);
-    extraFuncs->glVertexAttribPointer(ShaderProgram::VS_POS, numComponents, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offset));
-
-    offset += numComponents * sizeOfFloat;
-    numComponents = 4;
-    extraFuncs->glEnableVertexAttribArray(ShaderProgram::VS_COLOR);
-    extraFuncs->glVertexAttribPointer(ShaderProgram::VS_COLOR, numComponents, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offset));
-
-    offset += numComponents * sizeOfFloat;
-    numComponents = 2;
-    extraFuncs->glEnableVertexAttribArray(ShaderProgram::VS_TEXCOORDS);
-    extraFuncs->glVertexAttribPointer(ShaderProgram::VS_TEXCOORDS, numComponents, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offset));
+    QList<ShaderProgram::enVSAttrIdx> attrIdxVec = ShaderProgram::s_VS_ATTR_NAMES.keys();
+    size_t offset = 0;
+    for (int i = 0; i < attrIdxVec.size(); ++i)
+    {
+        ShaderProgram::enVSAttrIdx attrIdx = attrIdxVec[i];
+        GLint numComponents = ShaderProgram::s_VS_ATTR_NAMES[attrIdx].m_numComponents;
+        extraFuncs->glEnableVertexAttribArray(attrIdx);
+        extraFuncs->glVertexAttribPointer(attrIdx, numComponents, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offset));
+        offset += static_cast<size_t>(numComponents) * sizeof(float);
+    }
 
     extraFuncs->glBindVertexArray(0);
 }

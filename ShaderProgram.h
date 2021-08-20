@@ -17,7 +17,13 @@ public:
         VS_TEXCOORDS
     };
 
-    static const QMap<enVSAttrIdx, QString> s_VS_ATTR_NAMES;
+    struct VSAttrData
+    {
+        QString m_attrName;
+        int m_numComponents;
+    };
+
+    static const QMap<enVSAttrIdx, VSAttrData> s_VS_ATTR_NAMES;
 
     ShaderProgram(const QString& _vertexShaderFileName, const QString& _fragmentShaderFileName);
     ~ShaderProgram();

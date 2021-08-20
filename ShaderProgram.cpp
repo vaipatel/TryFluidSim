@@ -2,11 +2,11 @@
 #include <QMatrix4x4>
 #include <QOpenGLShaderProgram>
 
-const QMap<ShaderProgram::enVSAttrIdx, QString> ShaderProgram::s_VS_ATTR_NAMES =
+const QMap<ShaderProgram::enVSAttrIdx, ShaderProgram::VSAttrData> ShaderProgram::s_VS_ATTR_NAMES =
 {
-    {VS_POS, "VertexPosition"},
-    {VS_COLOR, "VertexColor"},
-    {VS_TEXCOORDS, "VertexTexCoords"}
+    {VS_POS,       {"VertexPosition",  3}}, // {x, y, z}
+    {VS_COLOR,     {"VertexColor",     4}}, // {r, g, b, a}
+    {VS_TEXCOORDS, {"VertexTexCoords", 2}}  // {u, v}
 };
 
 ShaderProgram::ShaderProgram(const QString& _vertexShaderFileName, const QString& _fragmentShaderFileName)
@@ -19,7 +19,7 @@ ShaderProgram::ShaderProgram(const QString& _vertexShaderFileName, const QString
 
     foreach (enVSAttrIdx attrIdx, s_VS_ATTR_NAMES.keys())
     {
-        m_program->bindAttributeLocation(s_VS_ATTR_NAMES[attrIdx].toUtf8().constData(), static_cast<int>(attrIdx));
+        m_program->bindAttributeLocation(s_VS_ATTR_NAMES[attrIdx].m_attrName.toUtf8().constData(), static_cast<int>(attrIdx));
     }
 
     bool canLink = m_program->link();
