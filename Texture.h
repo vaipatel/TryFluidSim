@@ -35,19 +35,19 @@ public:
     void CleanUp();
 
     size_t GetNumTextures() const { return m_numTextures; }
-    unsigned int GetTextureLoc() const { return m_textureLoc; }
-    unsigned int GetId(size_t _textureIdx = 0) const { return m_storedTextureData[_textureIdx].m_id; }
-    int GetWidth(size_t _textureIdx = 0) const { return m_storedTextureData[_textureIdx].m_width; }
-    int GetHeight(size_t _textureIdx = 0) const { return m_storedTextureData[_textureIdx].m_height; }
-    GLenum GetFormat(size_t _textureIdx = 0) const { return m_storedTextureData[_textureIdx].m_format; }
-    GLenum GetType(size_t _textureIdx = 0) const { return m_storedTextureData[_textureIdx].m_type; }
-    GLint GetInternalFormat(size_t _textureIdx = 0) const { return m_storedTextureData[_textureIdx].m_internalFormat; }
+    unsigned int GetHandle(size_t _textureIdx) const { Q_ASSERT(_textureIdx < m_numTextures); return m_handles[_textureIdx]; }
+    unsigned int GetId(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_id; }
+    int GetWidth(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_width; }
+    int GetHeight(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_height; }
+    GLenum GetFormat(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_format; }
+    GLenum GetType(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_type; }
+    GLint GetInternalFormat(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_internalFormat; }
 
 private:
     int CalcInternalFormat(GLenum _format, GLenum _type) const;
 
     size_t m_numTextures = 0;
-    unsigned int m_textureLoc = 0;    
+    std::vector<unsigned int> m_handles;
     std::vector<StoredTextureData> m_storedTextureData;
 };
 

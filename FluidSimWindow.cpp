@@ -111,17 +111,24 @@ void FluidSimWindow::SetupRenderTargetFBO()
     // 2. Generate the target texture
     //
     // -----
-    m_targetTexture = new Texture(m_viewWidth, m_viewHeight, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    m_targetTexture = new Texture({{m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, nullptr},
+                                   {m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, nullptr}});
 
     //
     // 3. Marry framebuffer and target texture by giving target texture as color attachment to framebuffer
     //
     // -----
     // Set target texture as our colour attachement #0
-    GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-    glFramebufferTexture2D(GL_FRAMEBUFFER, drawBuffers[0], GL_TEXTURE_2D, m_targetTexture->GetTextureLoc(), 0);
+    std::vector<GLenum> drawBuffers = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    size_t numDrawBuffers = drawBuffers.size();
+    Q_ASSERT(numDrawBuffers == m_targetTexture->GetNumTextures());
+    for (size_t idx = 0; idx< numDrawBuffers; ++idx)
+    {
+        unsigned int texHandle = m_targetTexture->GetHandle(idx);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, drawBuffers[idx], GL_TEXTURE_2D, texHandle, 0);
+    }
     // Set the drawBuffers
-    extraFuncs->glDrawBuffers(1, drawBuffers); // "1" is the size of DrawBuffers
+    extraFuncs->glDrawBuffers(static_cast<GLsizei>(numDrawBuffers), drawBuffers.data()); // "1" is the size of DrawBuffers
 
 //    //
 //    // 4. Also we might apparently need a render buffer because we have no depth
