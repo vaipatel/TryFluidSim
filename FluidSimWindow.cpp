@@ -1,5 +1,6 @@
 #include "FluidSimWindow.h"
 #include "ShaderProgram.h"
+#include "Texture.h"
 #include "TrisObject.h"
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLShaderProgram>
@@ -16,6 +17,12 @@ FluidSimWindow::~FluidSimWindow()
 {
     delete m_tri;
     delete m_quad;
+
+    if ( m_targetTexture )
+    {
+        delete m_targetTexture;
+        m_targetTexture = nullptr;
+    }
 }
 
 void FluidSimWindow::initialize()
@@ -33,14 +40,13 @@ void FluidSimWindow::initialize()
 
 ///
 /// \brief FluidSimWindow::DrawScreenQuad
-/// \param _targetTextureHandle - Handle to texture that is to be used
 ///
-void FluidSimWindow::DrawScreenQuad(GLuint _targetTextureHandle)
+void FluidSimWindow::DrawScreenQuad()
 {
     m_screenProgram->Bind();
-    m_screenProgram->SetUniform("screenTexture", 0);
-    //    glActiveTexture(GL_TEXTURE0 + 0);
-        glBindTexture(GL_TEXTURE_2D, _targetTextureHandle);
+    m_screenProgram->SetUniform("screenTexture", static_cast<int>(m_targetTexture->GetId()));
+
+    m_targetTexture->Bind();
 
     m_quad->Draw();
 
@@ -76,7 +82,7 @@ void FluidSimWindow::render()
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    DrawScreenQuad(m_targetTexture);
+    DrawScreenQuad();
 
     ++m_frame;
 }
@@ -86,7 +92,13 @@ void FluidSimWindow::CleanUpRenderTargetFBO()
     if ( m_targetFBO != 0 )
     {
         glDeleteFramebuffers(1, &m_targetFBO);
-        glDeleteTextures(1, &m_targetTexture);
+        // This grossness is hopefully only needed till I have a proper RenderTexture/RenderLayer class.
+        // Calling cleanup on that should cleanup the texture (but will I have just moved the problem?)
+        if ( m_targetTexture )
+        {
+            delete m_targetTexture;
+            m_targetTexture = nullptr;
+        }
     }
 }
 
@@ -126,30 +138,18 @@ void FluidSimWindow::SetupRenderTargetFBO()
     // -----
 
     //
-    // 2. Let's generate and bind the actual target texture
+    // 2. Generate the target texture
     //
     // -----
-    // The texture we're going to render to
-    glGenTextures(1, &m_targetTexture);
-
-    // "Bind" the newly created texture : all future texture functions will modify this texture
-    glBindTexture(GL_TEXTURE_2D, m_targetTexture);
-
-    // Give an empty image to OpenGL ( the last nullptr )
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-
-    // Poor filtering. Needed !
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    // -----
+    m_targetTexture = new Texture(m_viewWidth, m_viewHeight, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
     //
     // 3. Marry framebuffer and target texture by giving target texture as color attachment to framebuffer
     //
     // -----
-    // Set "renderedTexture" as our colour attachement #0
+    // Set target texture as our colour attachement #0
     GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-    glFramebufferTexture2D(GL_FRAMEBUFFER, drawBuffers[0], GL_TEXTURE_2D, m_targetTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, drawBuffers[0], GL_TEXTURE_2D, m_targetTexture->GetTextureLoc(), 0);
     // Set the drawBuffers
     extraFuncs->glDrawBuffers(1, drawBuffers); // "1" is the size of DrawBuffers
 
@@ -180,7 +180,7 @@ void FluidSimWindow::SetupRenderTargetFBO()
 void FluidSimWindow::SetupTriangle()
 {
     std::vector<Tri> triVertices = {
-             // positions          // colors                 // texCoords
+             // positions            // colors                 // texCoords
         {
             {{ 0.0f,  0.707f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
             {{-0.5f, -0.5f,   0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
@@ -239,12 +239,11 @@ void FluidSimWindow::UpdateViewPortIfNeeded()
         // Update viewport
         glViewport(0, 0, m_viewWidth, m_viewHeight);
 
-        // Update textures
+        // Recreate render layer (right now just cleans up and remakes the FBO + texture combo)
         if ( m_targetTexture )
         {
-            glBindTexture(GL_TEXTURE_2D, m_targetTexture);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_viewWidth, m_viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-            glBindTexture(GL_TEXTURE_2D, 0);
+            CleanUpRenderTargetFBO();
+            SetupRenderTargetFBO();
         }
     }
 }

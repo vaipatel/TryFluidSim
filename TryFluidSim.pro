@@ -12,6 +12,7 @@ SOURCES += \
     FluidSimWindow.cpp \
     OpenGLWindow.cpp \
     ShaderProgram.cpp \
+    Texture.cpp \
     TrisObject.cpp \
     main.cpp
 
@@ -19,6 +20,7 @@ HEADERS += \
     FluidSimWindow.h \
     OpenGLWindow.h \
     ShaderProgram.h \
+    Texture.h \
     TrisObject.h
 
 FORMS +=

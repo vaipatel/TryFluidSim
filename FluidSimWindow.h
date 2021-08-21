@@ -6,6 +6,7 @@
 #include <QPair>
 
 class ShaderProgram;
+class Texture;
 class TrisObject;
 class QWindow;
 
@@ -39,7 +40,8 @@ private:
     ShaderProgram* m_screenProgram;
     uint m_frame = 0;
     GLuint m_targetFBO = 0;
-    GLuint m_targetTexture = 0;
+//    GLuint m_targetTexture = 0;
+    Texture* m_targetTexture = nullptr;
     TrisObject* m_tri = nullptr;
     TrisObject* m_quad = nullptr;
     int m_viewWidth = 0;
@@ -49,7 +51,7 @@ private:
     void SetupRenderTargetFBO();
     void SetupTriangle();
     void SetupScreenQuad();
-    void DrawScreenQuad(GLuint _targetTextureHandle);
+    void DrawScreenQuad();
     void CleanUpRenderTargetFBO();
     QPair<int, int> CalcViewPortWidthHeight() const;
     void UpdateViewPortIfNeeded();
