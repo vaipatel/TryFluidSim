@@ -70,12 +70,23 @@ void ShaderProgram::SetUniform(const QString &_name, int _value)
     SetUniform(loc, _value);
 }
 
+void ShaderProgram::SetUniform(const QString &_name, float _value)
+{
+    unsigned int loc = GetUniformLocation(_name);
+    SetUniform(loc, _value);
+}
+
 void ShaderProgram::SetUniform(unsigned int _loc, const QMatrix4x4 &_value)
 {
     m_program->setUniformValue(static_cast<int>(_loc), _value);
 }
 
 void ShaderProgram::SetUniform(unsigned int _loc, int _value)
+{
+    m_program->setUniformValue(static_cast<int>(_loc), _value);
+}
+
+void ShaderProgram::SetUniform(unsigned int _loc, float _value)
 {
     m_program->setUniformValue(static_cast<int>(_loc), _value);
 }

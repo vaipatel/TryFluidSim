@@ -35,8 +35,10 @@ public:
     void SetAttribute(unsigned int _loc, float _value);
     void SetUniform(const QString& _name, const QMatrix4x4& _value);
     void SetUniform(const QString& _name, int _value);
+    void SetUniform(const QString& _name, float _value);
     void SetUniform(unsigned int _loc, const QMatrix4x4& _value);
     void SetUniform(unsigned int _loc, int _value);
+    void SetUniform(unsigned int _loc, float _value);
 
     void Bind();
     void Release();

@@ -193,8 +193,10 @@ void FluidSimWindow::DrawRotatingTriangle()
     QMatrix4x4 matrix;
     matrix.perspective(60.0f, m_viewAspect, 0.1f, 100.0f);
     matrix.translate(0, 0, -4);
-    matrix.rotate(static_cast<float>(100.0 * m_frame / screen()->refreshRate()), 0, 1, 0);
+    float angle = static_cast<float>(100.0 * m_frame / screen()->refreshRate());
+    matrix.rotate(angle, 0, 1, 0);
     m_triangleProgram->SetUniform("matrix", matrix);
+    m_triangleProgram->SetUniform("angle", angle);
 
     m_tri->Draw();
 
@@ -206,10 +208,11 @@ void FluidSimWindow::DrawRotatingTriangle()
 ///
 void FluidSimWindow::DrawScreenQuad()
 {
-    m_targetTexture->Bind();
+    // Bind texture at m_handles[1] to context
+    m_targetTexture->Bind(1);
 
     m_screenProgram->Bind();
-    m_screenProgram->SetUniform("screenTexture", static_cast<int>(m_targetTexture->GetId()));
+    m_screenProgram->SetUniform("screenTexture", static_cast<int>(m_targetTexture->GetId(1))); // Bind texture unit GL_TEXTURE0 + 1 of bound texture as uniform
 
     m_quad->Draw();
 
