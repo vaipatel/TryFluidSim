@@ -5,36 +5,54 @@
 #include <QString>
 
 Texture::Texture(int _width, int _height, GLenum _format, GLenum _type, const char* _data) :
-    m_width(_width),
-    m_height(_height),
-    m_format(_format),
-    m_type(_type)
+    Texture({{_width, _height, _format, _type, _data}})
 {
-    Q_ASSERT_X(_format != GL_NONE, __FUNCTION__, "Texture format cannot be none.");
-    Q_ASSERT_X(_type != GL_NONE, __FUNCTION__, "Texture type cannot be none.");
 
+}
+
+Texture::Texture(const std::vector<TextureData>& _dataForTextures)
+{
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-
-    //
-    // 2. Let's generate and bind the actual target texture
-    //
-    // -----
-    // The texture we're going to render to
-    extraFuncs->glGenTextures(1, &m_textureLoc);
-
-    // "Bind" the newly created texture : all future texture functions will modify this texture
-    extraFuncs->glActiveTexture(GL_TEXTURE0 + GetId()); // GetId() is 0 for single texture, but I'm just doing this for my own clarity
+    m_numTextures = _dataForTextures.size();
+    Q_ASSERT_X(m_numTextures > 0, __FUNCTION__, "Data for textures was empty. Cannot generate 0 textures.");
+    extraFuncs->glGenTextures(m_numTextures, &m_textureLoc);
     extraFuncs->glBindTexture(GL_TEXTURE_2D, m_textureLoc);
 
-    m_internalFormat = CalcInternalFormat();
-    extraFuncs->glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_width, m_height, 0, m_format, m_type, _data);
+    for (size_t textureIdx = 0; textureIdx < m_numTextures; ++textureIdx)
+    {
+        const TextureData& dataAtIdx = _dataForTextures[textureIdx];
+        Q_ASSERT_X(dataAtIdx.m_format != GL_NONE, __FUNCTION__, QString("Texture format for texture %1 cannot be none.").arg(textureIdx).toUtf8().constData());
+        Q_ASSERT_X(dataAtIdx.m_type != GL_NONE, __FUNCTION__, QString("Texture type for texture %1 cannot be none.").arg(textureIdx).toUtf8().constData());
 
-    // Poor filtering. Needed !
-    extraFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    extraFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        StoredTextureData storedDataAtIdx;
+        storedDataAtIdx.m_id = textureIdx;
+        storedDataAtIdx.m_width = dataAtIdx.m_width;
+        storedDataAtIdx.m_height = dataAtIdx.m_height;
+        storedDataAtIdx.m_format = dataAtIdx.m_format;
+        storedDataAtIdx.m_type = dataAtIdx.m_type;
+        storedDataAtIdx.m_internalFormat = CalcInternalFormat(storedDataAtIdx.m_format, storedDataAtIdx.m_type);
+
+        extraFuncs->glActiveTexture(GL_TEXTURE0 + storedDataAtIdx.m_id);
+        extraFuncs->glTexImage2D(GL_TEXTURE_2D,
+                                 0,
+                                 storedDataAtIdx.m_internalFormat,
+                                 storedDataAtIdx.m_width,
+                                 storedDataAtIdx.m_height,
+                                 0,
+                                 storedDataAtIdx.m_format,
+                                 storedDataAtIdx.m_type,
+                                 dataAtIdx.data);
+
+        // Poor filtering. Needed !
+        extraFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        extraFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+        m_storedTextureData.push_back(storedDataAtIdx);
+    }
 
     extraFuncs->glBindTexture(GL_TEXTURE_2D, 0);
 }
+
 
 Texture::~Texture()
 {
@@ -45,10 +63,10 @@ Texture::~Texture()
     }
 }
 
-void Texture::Bind()
+void Texture::Bind(size_t _textureIdx)
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-    extraFuncs->glActiveTexture(GL_TEXTURE0 + GetId()); // GetId() is 0 for single texture, but I'm just doing this for my own clarity
+    extraFuncs->glActiveTexture(GL_TEXTURE0 + GetId(_textureIdx));
     extraFuncs->glBindTexture(GL_TEXTURE_2D, m_textureLoc);
 }
 
@@ -59,29 +77,30 @@ void Texture::CleanUp()
         QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
         if ( extraFuncs )
         {
-            extraFuncs->glDeleteTextures(1, &m_textureLoc);
+            extraFuncs->glDeleteTextures(m_numTextures, &m_textureLoc);
+            m_storedTextureData.clear();
         }
     }
 }
 
-int Texture::CalcInternalFormat() const
+int Texture::CalcInternalFormat(GLenum _format, GLenum _type) const
 {
     int internalFormat = GL_NONE;
 
     bool failed = false;
-    switch(m_type)
+    switch(_type)
     {
     case GL_UNSIGNED_BYTE:
     case GL_BYTE:
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
     {
-        switch(m_format)
+        switch(_format)
         {
         case GL_RED:
         case GL_RGB:
         case GL_RGBA:
-            internalFormat = static_cast<GLint>(m_format);
+            internalFormat = static_cast<GLint>(_format);
             break;
         default:
             failed = true;
@@ -91,7 +110,7 @@ int Texture::CalcInternalFormat() const
     }
     case GL_FLOAT:
     {
-        switch(m_format)
+        switch(_format)
         {
         case GL_RED:
             internalFormat = GL_R32F;
@@ -114,7 +133,7 @@ int Texture::CalcInternalFormat() const
     }
 
     QString msgIfFailed = QString("Could not deduce Texture internal format for format %1 using type %2")
-                          .arg(m_format, 4, 16, QChar('0')).arg(m_type, 4, 16, QChar('0'));
+                          .arg(_format, 4, 16, QChar('0')).arg(_type, 4, 16, QChar('0'));
     Q_ASSERT_X(!failed, __FUNCTION__, msgIfFailed.toUtf8().constData());
 
     return internalFormat;

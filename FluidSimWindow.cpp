@@ -38,21 +38,6 @@ void FluidSimWindow::initialize()
     SetupTriangle();
 }
 
-///
-/// \brief FluidSimWindow::DrawScreenQuad
-///
-void FluidSimWindow::DrawScreenQuad()
-{
-    m_screenProgram->Bind();
-    m_screenProgram->SetUniform("screenTexture", static_cast<int>(m_targetTexture->GetId()));
-
-    m_targetTexture->Bind();
-
-    m_quad->Draw();
-
-    m_screenProgram->Release();
-}
-
 void FluidSimWindow::render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
@@ -87,6 +72,13 @@ void FluidSimWindow::render()
     ++m_frame;
 }
 
+void FluidSimWindow::cleanup()
+{
+    CleanUpRenderTargetFBO();
+    m_quad->CleanUp();
+    m_tri->CleanUp();
+}
+
 void FluidSimWindow::CleanUpRenderTargetFBO()
 {
     if ( m_targetFBO != 0 )
@@ -100,28 +92,6 @@ void FluidSimWindow::CleanUpRenderTargetFBO()
             m_targetTexture = nullptr;
         }
     }
-}
-
-void FluidSimWindow::cleanup()
-{
-    CleanUpRenderTargetFBO();
-    m_quad->CleanUp();
-    m_tri->CleanUp();
-}
-
-void FluidSimWindow::DrawRotatingTriangle()
-{
-    m_triangleProgram->Bind();
-
-    QMatrix4x4 matrix;
-    matrix.perspective(60.0f, m_viewAspect, 0.1f, 100.0f);
-    matrix.translate(0, 0, -4);
-    matrix.rotate(static_cast<float>(100.0 * m_frame / screen()->refreshRate()), 0, 1, 0);
-    m_triangleProgram->SetUniform("matrix", matrix);
-
-    m_tri->Draw();
-
-    m_triangleProgram->Release();
 }
 
 void FluidSimWindow::SetupRenderTargetFBO()
@@ -206,6 +176,37 @@ void FluidSimWindow::SetupScreenQuad()
         }
     };
     m_quad = new TrisObject(quadVertices);
+}
+
+
+void FluidSimWindow::DrawRotatingTriangle()
+{
+    m_triangleProgram->Bind();
+
+    QMatrix4x4 matrix;
+    matrix.perspective(60.0f, m_viewAspect, 0.1f, 100.0f);
+    matrix.translate(0, 0, -4);
+    matrix.rotate(static_cast<float>(100.0 * m_frame / screen()->refreshRate()), 0, 1, 0);
+    m_triangleProgram->SetUniform("matrix", matrix);
+
+    m_tri->Draw();
+
+    m_triangleProgram->Release();
+}
+
+///
+/// \brief FluidSimWindow::DrawScreenQuad
+///
+void FluidSimWindow::DrawScreenQuad()
+{
+    m_targetTexture->Bind();
+
+    m_screenProgram->Bind();
+    m_screenProgram->SetUniform("screenTexture", static_cast<int>(m_targetTexture->GetId()));
+
+    m_quad->Draw();
+
+    m_screenProgram->Release();
 }
 
 QPair<int, int> FluidSimWindow::CalcViewPortWidthHeight() const
