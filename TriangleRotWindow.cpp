@@ -1,4 +1,4 @@
-#include "FluidSimWindow.h"
+#include "TriangleRotWindow.h"
 #include "RenderTargetBuffer.h"
 #include "ShaderProgram.h"
 #include "Texture.h"
@@ -9,12 +9,12 @@
 #include <QWindow>
 #include <QtGlobal>
 
-FluidSimWindow::FluidSimWindow(QWindow* _parent) : OpenGLWindow(_parent)
+TriangleRotWindow::TriangleRotWindow(QWindow* _parent) : OpenGLWindow(_parent)
 {
 
 }
 
-FluidSimWindow::~FluidSimWindow()
+TriangleRotWindow::~TriangleRotWindow()
 {
     delete m_tri;
     delete m_quad;
@@ -30,7 +30,7 @@ FluidSimWindow::~FluidSimWindow()
     }
 }
 
-void FluidSimWindow::initialize()
+void TriangleRotWindow::initialize()
 {
     glEnable(GL_DEPTH_TEST);
 
@@ -43,7 +43,7 @@ void FluidSimWindow::initialize()
     SetupTriangle();
 }
 
-void FluidSimWindow::render()
+void TriangleRotWindow::render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -64,14 +64,14 @@ void FluidSimWindow::render()
     ++m_frame;
 }
 
-void FluidSimWindow::cleanup()
+void TriangleRotWindow::cleanup()
 {
     CleanUpRenderTargetFBO();
     m_quad->CleanUp();
     m_tri->CleanUp();
 }
 
-void FluidSimWindow::CleanUpRenderTargetFBO()
+void TriangleRotWindow::CleanUpRenderTargetFBO()
 {
     if ( m_renderTargetBuffer )
     {
@@ -86,7 +86,7 @@ void FluidSimWindow::CleanUpRenderTargetFBO()
     }
 }
 
-void FluidSimWindow::SetupRenderTargetFBO()
+void TriangleRotWindow::SetupRenderTargetFBO()
 {
     m_targetTexture = new Texture({{m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, nullptr},
                                    {m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, nullptr}});
@@ -98,7 +98,7 @@ void FluidSimWindow::SetupRenderTargetFBO()
     m_renderTargetBuffer->SetClearColor({38, 38, 38, 255});
 }
 
-void FluidSimWindow::SetupTriangle()
+void TriangleRotWindow::SetupTriangle()
 {
     std::vector<Tri> triVertices = {
              // positions            // colors                 // texCoords
@@ -111,7 +111,7 @@ void FluidSimWindow::SetupTriangle()
     m_tri = new TrisObject(triVertices);
 }
 
-void FluidSimWindow::SetupScreenQuad()
+void TriangleRotWindow::SetupScreenQuad()
 {
     std::vector<Tri> quadVertices = {
              // positions          // colors                 // texCoords
@@ -130,7 +130,7 @@ void FluidSimWindow::SetupScreenQuad()
 }
 
 
-void FluidSimWindow::DrawRotatingTriangle()
+void TriangleRotWindow::DrawRotatingTriangle()
 {
     m_triangleProgram->Bind();
 
@@ -150,7 +150,7 @@ void FluidSimWindow::DrawRotatingTriangle()
 ///
 /// \brief FluidSimWindow::DrawScreenQuad
 ///
-void FluidSimWindow::DrawScreenQuad()
+void TriangleRotWindow::DrawScreenQuad()
 {
     // Bind texture at m_handles[1] to context
     m_targetTexture->Bind(1);
@@ -163,7 +163,7 @@ void FluidSimWindow::DrawScreenQuad()
     m_screenProgram->Release();
 }
 
-QPair<int, int> FluidSimWindow::CalcViewPortWidthHeight() const
+QPair<int, int> TriangleRotWindow::CalcViewPortWidthHeight() const
 {
     const GLsizei retinaScale = static_cast<GLsizei>(devicePixelRatio());
 
@@ -178,7 +178,7 @@ QPair<int, int> FluidSimWindow::CalcViewPortWidthHeight() const
 /// \brief Updates the viewport width and height if necessary. If updated, this function additionally
 ///        updates the aspect ratio value, calls glViewport() and recreates the render target FBOs.
 ///
-void FluidSimWindow::UpdateViewPortIfNeeded()
+void TriangleRotWindow::UpdateViewPortIfNeeded()
 {
     QPair<int, int> viewWidthAndHeight = CalcViewPortWidthHeight();
     int viewWidth = viewWidthAndHeight.first;

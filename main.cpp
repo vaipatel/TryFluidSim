@@ -1,4 +1,4 @@
-#include "FluidSimWindow.h"
+#include "TriangleRotWindow.h"
 
 #include <QApplication>
 
@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     format.setVersion(4, 2);
     format.setSamples(16);
 
-    FluidSimWindow window;
+    TriangleRotWindow window;
     window.setFormat(format);
     window.resize(640, 480);
     window.show();

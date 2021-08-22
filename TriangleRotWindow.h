@@ -1,5 +1,5 @@
-#ifndef FLUIDSIMWINDOW_H
-#define FLUIDSIMWINDOW_H
+#ifndef TRIANGLEROTWINDOW_H
+#define TRIANGLEROTWINDOW_H
 
 #include "OpenGLWindow.h"
 
@@ -11,11 +11,11 @@ class Texture;
 class TrisObject;
 class QWindow;
 
-class FluidSimWindow : public OpenGLWindow
+class TriangleRotWindow : public OpenGLWindow
 {
 public:
-    FluidSimWindow(QWindow* _parent = nullptr);
-    ~FluidSimWindow() override;
+    TriangleRotWindow(QWindow* _parent = nullptr);
+    ~TriangleRotWindow() override;
 
     void initialize() override;
     void render() override;
@@ -31,7 +31,6 @@ private:
     ShaderProgram* m_triangleProgram; //!< Need one of these for each step of fluid sim
     ShaderProgram* m_screenProgram;
     uint m_frame = 0;
-//    GLuint m_targetFBO = 0;
     RenderTargetBuffer* m_renderTargetBuffer = nullptr;
     Texture* m_targetTexture = nullptr;
     TrisObject* m_tri = nullptr;
@@ -50,4 +49,4 @@ private:
     void UpdateViewPortIfNeeded();
 };
 
-#endif // FLUIDSIMWINDOW_H
+#endif // TRIANGLEROTWINDOW_H

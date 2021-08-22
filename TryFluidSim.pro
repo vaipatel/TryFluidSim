@@ -9,20 +9,20 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    FluidSimWindow.cpp \
     OpenGLWindow.cpp \
     RenderTargetBuffer.cpp \
     ShaderProgram.cpp \
     Texture.cpp \
+    TriangleRotWindow.cpp \
     TrisObject.cpp \
     main.cpp
 
 HEADERS += \
-    FluidSimWindow.h \
     OpenGLWindow.h \
     RenderTargetBuffer.h \
     ShaderProgram.h \
     Texture.h \
+    TriangleRotWindow.h \
     TrisObject.h
 
 FORMS +=
