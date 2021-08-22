@@ -1,4 +1,5 @@
 #include "FluidSimWindow.h"
+#include "RenderTargetBuffer.h"
 #include "ShaderProgram.h"
 #include "Texture.h"
 #include "TrisObject.h"
@@ -18,10 +19,14 @@ FluidSimWindow::~FluidSimWindow()
     delete m_tri;
     delete m_quad;
 
+    if ( m_renderTargetBuffer )
+    {
+        delete m_renderTargetBuffer;
+    }
+
     if ( m_targetTexture )
     {
         delete m_targetTexture;
-        m_targetTexture = nullptr;
     }
 }
 
@@ -45,28 +50,15 @@ void FluidSimWindow::render()
     // Handle window resizing
     UpdateViewPortIfNeeded();
 
-    //
-    // 4. First Pass
-    //
-    // -----
-    // first pass
-    glBindFramebuffer(GL_FRAMEBUFFER, m_targetFBO);
-    glEnable(GL_DEPTH_TEST);
-    glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
-
+    // Render to texture
+    m_renderTargetBuffer->Bind();
     DrawRotatingTriangle();
 
-    //
-    // 5. Second Pass
-    //
-    // -----
-    // Unbind here and give back to default FBO
+    // Blit texture to screen
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST); // Disable depth test so screen space quad is not discarded due to depth test
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-
     DrawScreenQuad();
 
     ++m_frame;
@@ -81,77 +73,29 @@ void FluidSimWindow::cleanup()
 
 void FluidSimWindow::CleanUpRenderTargetFBO()
 {
-    if ( m_targetFBO != 0 )
+    if ( m_renderTargetBuffer )
     {
-        glDeleteFramebuffers(1, &m_targetFBO);
-        // This grossness is hopefully only needed till I have a proper RenderTexture/RenderLayer class.
-        // Calling cleanup on that should cleanup the texture (but will I have just moved the problem?)
-        if ( m_targetTexture )
-        {
-            delete m_targetTexture;
-            m_targetTexture = nullptr;
-        }
+        delete m_renderTargetBuffer;
+        m_renderTargetBuffer = nullptr;
+    }
+
+    if ( m_targetTexture )
+    {
+        delete m_targetTexture;
+        m_targetTexture = nullptr;
     }
 }
 
 void FluidSimWindow::SetupRenderTargetFBO()
 {
-    QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-
-    //
-    // 1. The framebuffer is our container for our target texture
-    //
-    // -----
-    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
-    glGenFramebuffers(1, &m_targetFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_targetFBO);
-    // -----
-
-    //
-    // 2. Generate the target texture
-    //
-    // -----
     m_targetTexture = new Texture({{m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, nullptr},
                                    {m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, nullptr}});
 
-    //
-    // 3. Marry framebuffer and target texture by giving target texture as color attachment to framebuffer
-    //
-    // -----
-    // Set target texture as our colour attachement #0
-    std::vector<GLenum> drawBuffers = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-    size_t numDrawBuffers = drawBuffers.size();
-    Q_ASSERT(numDrawBuffers == m_targetTexture->GetNumTextures());
-    for (size_t idx = 0; idx< numDrawBuffers; ++idx)
-    {
-        unsigned int texHandle = m_targetTexture->GetHandle(idx);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, drawBuffers[idx], GL_TEXTURE_2D, texHandle, 0);
-    }
-    // Set the drawBuffers
-    extraFuncs->glDrawBuffers(static_cast<GLsizei>(numDrawBuffers), drawBuffers.data()); // "1" is the size of DrawBuffers
+    m_renderTargetBuffer = new RenderTargetBuffer(m_targetTexture);
 
-//    //
-//    // 4. Also we might apparently need a render buffer because we have no depth
-//    //
-//    // -----
-//    GLuint renderBuffer;
-//    glGenRenderbuffers(1, &renderBuffer);
-//    glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
-//    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, viewWidth, viewHeight);
-//    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
-
-    // Always check that our framebuffer is ok
-    {
-        bool frameBufferStatusOk = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
-        if ( !frameBufferStatusOk )
-        {
-            qDebug() << "VAIVAI" << "FrameBuffer status not ok";
-            exit(1);
-        }
-    }
-
-    // Unbind here and give back to default FBO. Is this just for good practice here? I'll have to rebind to targetFBO now.
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    m_renderTargetBuffer->SetDepthTestEnabled(false);
+    m_renderTargetBuffer->SetClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+    m_renderTargetBuffer->SetClearColor({38, 38, 38, 255});
 }
 
 void FluidSimWindow::SetupTriangle()

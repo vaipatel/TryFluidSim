@@ -5,6 +5,7 @@
 
 #include <QPair>
 
+class RenderTargetBuffer;
 class ShaderProgram;
 class Texture;
 class TrisObject;
@@ -30,7 +31,8 @@ private:
     ShaderProgram* m_triangleProgram; //!< Need one of these for each step of fluid sim
     ShaderProgram* m_screenProgram;
     uint m_frame = 0;
-    GLuint m_targetFBO = 0;
+//    GLuint m_targetFBO = 0;
+    RenderTargetBuffer* m_renderTargetBuffer = nullptr;
     Texture* m_targetTexture = nullptr;
     TrisObject* m_tri = nullptr;
     TrisObject* m_quad = nullptr;

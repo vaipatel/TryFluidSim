@@ -11,6 +11,7 @@ CONFIG += c++11
 SOURCES += \
     FluidSimWindow.cpp \
     OpenGLWindow.cpp \
+    RenderTargetBuffer.cpp \
     ShaderProgram.cpp \
     Texture.cpp \
     TrisObject.cpp \
@@ -19,6 +20,7 @@ SOURCES += \
 HEADERS += \
     FluidSimWindow.h \
     OpenGLWindow.h \
+    RenderTargetBuffer.h \
     ShaderProgram.h \
     Texture.h \
     TrisObject.h

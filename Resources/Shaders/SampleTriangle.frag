@@ -2,8 +2,8 @@
 
 uniform float angle;
 in vec4 col;
-out vec4 FragColor1; // Pointed to by GL_COLOR_ATTACHMENT0 + 0. Will write to texture at m_handles[0] in texture unit GL_TEXTURE0 + 0.
-out vec4 FragColor2; // Pointed to by GL_COLOR_ATTACHMENT0 + 1. Will write to texture at m_handles[1] in texture unit GL_TEXTURE0 + 1.
+layout (location = 0) out vec4 FragColor1; // Pointed to by GL_COLOR_ATTACHMENT0 + 0. Will write to texture at m_handles[0] in texture unit GL_TEXTURE0 + 0.
+layout (location = 1) out vec4 FragColor2; // Pointed to by GL_COLOR_ATTACHMENT0 + 1. Will write to texture at m_handles[1] in texture unit GL_TEXTURE0 + 1.
 
 void main()
 {
