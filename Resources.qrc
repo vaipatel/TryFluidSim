@@ -4,5 +4,6 @@
         <file>Resources/Shaders/SampleTriangle.frag</file>
         <file>Resources/Shaders/BlitToScreenQuad.vert</file>
         <file>Resources/Shaders/BlitToScreenQuad.frag</file>
+        <file>Resources/Images/Moscow_traffic_congestion.JPG</file>
     </qresource>
 </RCC>

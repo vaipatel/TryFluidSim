@@ -3,6 +3,7 @@
 #include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
 #include <QString>
+#include <QOpenGLTexture>
 
 Texture::Texture(int _width, int _height, GLenum _format, GLenum _type, const char* _data) :
     Texture({{_width, _height, _format, _type, _data}})
@@ -11,6 +12,49 @@ Texture::Texture(int _width, int _height, GLenum _format, GLenum _type, const ch
 }
 
 Texture::Texture(const std::vector<TextureData>& _dataForTextures)
+{
+    Construct(_dataForTextures);
+}
+
+Texture::Texture(const QString& _imageFileName)
+{
+    QImage image(_imageFileName);
+    QOpenGLTexture texture(image);
+
+    TextureData texData = {texture.width(), texture.height(), texture.format(), GL_UNSIGNED_BYTE, image.bits()};
+    Construct({texData});
+}
+
+
+Texture::~Texture()
+{
+    if ( QOpenGLContext::currentContext() )
+    {
+        CleanUp();
+    }
+}
+
+void Texture::Bind(size_t _textureIdx)
+{
+    QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
+    extraFuncs->glActiveTexture(GL_TEXTURE0 + GetId(_textureIdx));
+    extraFuncs->glBindTexture(GL_TEXTURE_2D, GetHandle(_textureIdx));
+}
+
+void Texture::CleanUp()
+{
+    if ( QOpenGLContext::currentContext() )
+    {
+        QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
+        if ( extraFuncs )
+        {
+            extraFuncs->glDeleteTextures(static_cast<GLsizei>(m_numTextures), m_handles.data());
+            m_storedTextureData.clear();
+        }
+    }
+}
+
+void Texture::Construct(const std::vector<TextureData> &_dataForTextures)
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
     m_numTextures = _dataForTextures.size();
@@ -57,35 +101,6 @@ Texture::Texture(const std::vector<TextureData>& _dataForTextures)
     extraFuncs->glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-
-Texture::~Texture()
-{
-    if ( QOpenGLContext::currentContext() )
-    {
-        CleanUp();
-    }
-}
-
-void Texture::Bind(size_t _textureIdx)
-{
-    QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-    extraFuncs->glActiveTexture(GL_TEXTURE0 + GetId(_textureIdx));
-    extraFuncs->glBindTexture(GL_TEXTURE_2D, GetHandle(_textureIdx));
-}
-
-void Texture::CleanUp()
-{
-    if ( QOpenGLContext::currentContext() )
-    {
-        QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-        if ( extraFuncs )
-        {
-            extraFuncs->glDeleteTextures(static_cast<GLsizei>(m_numTextures), m_handles.data());
-            m_storedTextureData.clear();
-        }
-    }
-}
-
 int Texture::CalcInternalFormat(GLenum _format, GLenum _type) const
 {
     int internalFormat = GL_NONE;
@@ -97,12 +112,15 @@ int Texture::CalcInternalFormat(GLenum _format, GLenum _type) const
     case GL_BYTE:
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
+    case GL_INT:
+    case GL_UNSIGNED_INT:
     {
         switch(_format)
         {
         case GL_RED:
         case GL_RGB:
         case GL_RGBA:
+        case GL_RGBA8:
             internalFormat = static_cast<GLint>(_format);
             break;
         default:

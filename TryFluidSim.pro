@@ -9,6 +9,7 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    ImageTextureWindow.cpp \
     OpenGLWindow.cpp \
     RenderTargetBuffer.cpp \
     ShaderProgram.cpp \
@@ -18,6 +19,7 @@ SOURCES += \
     main.cpp
 
 HEADERS += \
+    ImageTextureWindow.h \
     OpenGLWindow.h \
     RenderTargetBuffer.h \
     ShaderProgram.h \
@@ -36,7 +38,8 @@ DISTFILES += \
     Resources/Shaders/SampleTriangle.vert \
     Resources/Shaders/SampleTriangle.frag \
     Resources/Shaders/BlitToScreenQuad.vert \
-    Resources/Shaders/BlitToScreenQuad.frag
+    Resources/Shaders/BlitToScreenQuad.frag \
+    Resources/Images/Moscow_traffic_congestion.JPG
 
 RESOURCES += \
     Resources.qrc

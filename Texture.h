@@ -10,7 +10,7 @@ struct TextureData
     int m_height;
     GLenum m_format;
     GLenum m_type;
-    const char* data;
+    const void* data;
 };
 
 class Texture
@@ -29,6 +29,7 @@ public:
 
     Texture(int _width, int _height, GLenum _format, GLenum _type, const char* _data);
     Texture(const std::vector<TextureData>& _dataForTextures);
+    Texture(const QString& _imageFileName);
     ~Texture();
 
     void Bind(size_t _textureIdx = 0);
@@ -44,6 +45,7 @@ public:
     GLint GetInternalFormat(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_internalFormat; }
 
 private:
+    void Construct(const std::vector<TextureData>& _dataForTextures);
     int CalcInternalFormat(GLenum _format, GLenum _type) const;
 
     size_t m_numTextures = 0;
