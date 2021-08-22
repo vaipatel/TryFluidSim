@@ -7,7 +7,9 @@ RenderTargetBuffer::RenderTargetBuffer(Texture* _targetTexture) :
     m_targetTexture(_targetTexture)
 {
     Q_ASSERT(m_targetTexture != nullptr);
-    Q_ASSERT(m_targetTexture->GetNumTextures() > 0);
+    size_t numTextures = m_targetTexture->GetNumTextures();
+    Q_ASSERT(numTextures > 0);
+
 
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
 
@@ -22,9 +24,8 @@ RenderTargetBuffer::RenderTargetBuffer(Texture* _targetTexture) :
 //    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, viewWidth, viewHeight);
 //    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
 
-    size_t numTextures = m_targetTexture->GetNumTextures();
     std::vector<GLenum> drawBuffers(numTextures);
-    for (size_t idx = 0; idx < numTextures; ++idx)
+    for (unsigned int idx = 0; idx < numTextures; ++idx)
     {
         drawBuffers[idx] = GL_COLOR_ATTACHMENT0 + idx;
         unsigned int texHandle = m_targetTexture->GetHandle(idx);
@@ -61,10 +62,10 @@ void RenderTargetBuffer::Bind()
 
     if ( m_clearMask & GL_COLOR_BUFFER_BIT )
     {
-        float r = m_clearColor.redF();
-        float g = m_clearColor.greenF();
-        float b = m_clearColor.blueF();
-        float a = m_clearColor.alphaF();
+        GLclampf r = static_cast<GLclampf>(m_clearColor.redF());
+        GLclampf g = static_cast<GLclampf>(m_clearColor.greenF());
+        GLclampf b = static_cast<GLclampf>(m_clearColor.blueF());
+        GLclampf a = static_cast<GLclampf>(m_clearColor.alphaF());
         extraFuncs->glClearColor(r, g, b, a);
     }
     if ( m_clearMask != 0 )
@@ -80,7 +81,7 @@ void RenderTargetBuffer::CleanUp()
         QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
         if ( extraFuncs )
         {
-            glDeleteFramebuffers(1, &m_targetFBO);
+            extraFuncs->glDeleteFramebuffers(1, &m_targetFBO);
             m_targetFBO = 0;
         }
     }
