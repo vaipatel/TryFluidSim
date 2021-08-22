@@ -17,9 +17,11 @@ public:
     TriangleRotWindow(QWindow* _parent = nullptr);
     ~TriangleRotWindow() override;
 
+protected:
     void initialize() override;
     void render() override;
     void cleanup() override;
+    void HandleViewPortUpdated() override;
 
 private:
     const QString m_sampleTriangleVertShaderFileName = ":/Resources/Shaders/SampleTriangle.vert";
@@ -35,9 +37,6 @@ private:
     Texture* m_targetTexture = nullptr;
     TrisObject* m_tri = nullptr;
     TrisObject* m_quad = nullptr;
-    int m_viewWidth = 0;
-    int m_viewHeight = 0;
-    float m_viewAspect = 0;
 
     void CleanUpRenderTargetFBO();
     void SetupRenderTargetFBO();
@@ -45,8 +44,6 @@ private:
     void SetupScreenQuad();
     void DrawRotatingTriangle();
     void DrawScreenQuad();
-    QPair<int, int> CalcViewPortWidthHeight() const;
-    void UpdateViewPortIfNeeded();
 };
 
 #endif // TRIANGLEROTWINDOW_H

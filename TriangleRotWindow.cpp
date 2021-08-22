@@ -37,7 +37,6 @@ void TriangleRotWindow::initialize()
     m_triangleProgram = new ShaderProgram(m_sampleTriangleVertShaderFileName, m_sampleTriangleFragShaderFileName);
     m_screenProgram = new ShaderProgram(m_blitToScreenQuadVertShaderFileName, m_blitToScreenQuadFragShaderFileName);
 
-    UpdateViewPortIfNeeded();
     SetupRenderTargetFBO();
     SetupScreenQuad();
     SetupTriangle();
@@ -46,9 +45,6 @@ void TriangleRotWindow::initialize()
 void TriangleRotWindow::render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-
-    // Handle window resizing
-    UpdateViewPortIfNeeded();
 
     // Render to texture
     m_renderTargetBuffer->Bind();
@@ -69,6 +65,19 @@ void TriangleRotWindow::cleanup()
     CleanUpRenderTargetFBO();
     m_quad->CleanUp();
     m_tri->CleanUp();
+}
+
+void TriangleRotWindow::HandleViewPortUpdated()
+{
+    // Update viewport
+    glViewport(0, 0, m_viewWidth, m_viewHeight);
+
+    // Recreate render layer (right now just cleans up and remakes the FBO + texture combo)
+    if ( m_targetTexture )
+    {
+        CleanUpRenderTargetFBO();
+        SetupRenderTargetFBO();
+    }
 }
 
 void TriangleRotWindow::CleanUpRenderTargetFBO()
@@ -161,44 +170,4 @@ void TriangleRotWindow::DrawScreenQuad()
     m_quad->Draw();
 
     m_screenProgram->Release();
-}
-
-QPair<int, int> TriangleRotWindow::CalcViewPortWidthHeight() const
-{
-    const GLsizei retinaScale = static_cast<GLsizei>(devicePixelRatio());
-
-    // Vai: Calc viewport width/height
-    GLsizei viewWidth = width() * retinaScale;
-    GLsizei viewHeight = height() * retinaScale;
-
-    return {viewWidth, viewHeight};
-}
-
-///
-/// \brief Updates the viewport width and height if necessary. If updated, this function additionally
-///        updates the aspect ratio value, calls glViewport() and recreates the render target FBOs.
-///
-void TriangleRotWindow::UpdateViewPortIfNeeded()
-{
-    QPair<int, int> viewWidthAndHeight = CalcViewPortWidthHeight();
-    int viewWidth = viewWidthAndHeight.first;
-    int viewHeight = viewWidthAndHeight.second;
-
-    if ( viewWidth != m_viewWidth || viewHeight != m_viewHeight )
-    {
-        // Update width, height and aspect
-        m_viewWidth = viewWidth;
-        m_viewHeight = viewHeight;
-        m_viewAspect = static_cast<float>(m_viewWidth)/static_cast<float>(m_viewHeight);
-
-        // Update viewport
-        glViewport(0, 0, m_viewWidth, m_viewHeight);
-
-        // Recreate render layer (right now just cleans up and remakes the FBO + texture combo)
-        if ( m_targetTexture )
-        {
-            CleanUpRenderTargetFBO();
-            SetupRenderTargetFBO();
-        }
-    }
 }

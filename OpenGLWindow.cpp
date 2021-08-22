@@ -118,7 +118,12 @@ void OpenGLWindow::renderNow()
     if (needsInitialize)
     {
         initializeOpenGLFunctions();
+        UpdateViewPortIfNeeded();
         initialize();
+    }
+    else
+    {
+        UpdateViewPortIfNeeded();
     }
 
     // Call child's render
@@ -140,6 +145,38 @@ void OpenGLWindow::setAnimating(bool _animating)
     if (_animating)
     {
         renderLater();
+    }
+}
+
+QPair<int, int> OpenGLWindow::CalcViewPortWidthHeight() const
+{
+    const GLsizei retinaScale = static_cast<GLsizei>(devicePixelRatio());
+
+    // Vai: Calc viewport width/height
+    GLsizei viewWidth = width() * retinaScale;
+    GLsizei viewHeight = height() * retinaScale;
+
+    return {viewWidth, viewHeight};
+}
+
+///
+/// \brief Updates the viewport width and height if necessary. If updated, this function additionally
+///        updates the aspect ratio value, calls glViewport() and recreates the render target FBOs.
+///
+void OpenGLWindow::UpdateViewPortIfNeeded()
+{
+    QPair<int, int> viewWidthAndHeight = CalcViewPortWidthHeight();
+    int viewWidth = viewWidthAndHeight.first;
+    int viewHeight = viewWidthAndHeight.second;
+
+    if ( viewWidth != m_viewWidth || viewHeight != m_viewHeight )
+    {
+        // Update width, height and aspect
+        m_viewWidth = viewWidth;
+        m_viewHeight = viewHeight;
+        m_viewAspect = static_cast<float>(m_viewWidth)/static_cast<float>(m_viewHeight);
+
+        HandleViewPortUpdated();
     }
 }
 
