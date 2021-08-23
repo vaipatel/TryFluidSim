@@ -60,6 +60,7 @@ bool OpenGLWindow::event(QEvent* _event)
         return true;
     case QEvent::Close:
         cleanup();
+        [[clang::fallthrough]];
     default:
         return QWindow::event(_event);
     }
