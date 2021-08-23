@@ -62,6 +62,6 @@ void ImageTextureWindow::CleanUpTexture()
 
 void ImageTextureWindow::SetupTexture()
 {
-    m_texture = new Texture(m_imageFileName);
+    m_texture = new Texture(m_perlinNoiseImgFileName);
 }
 

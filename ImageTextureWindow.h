@@ -23,7 +23,8 @@ private:
     void CleanUpTexture();
     void SetupTexture();
 
-    const QString m_imageFileName = ":/Resources/Images/Moscow_traffic_congestion.JPG";
+    const QString m_perlinNoiseImgFileName = ":/Resources/Images/perlin_noise_texture-500x500.png";
+    const QString m_redPepperImgFileName = ":/Resources/Images/red_pepper_strip.png";
 
     Texture* m_texture = nullptr;
     Blitter* m_blitter = nullptr;
