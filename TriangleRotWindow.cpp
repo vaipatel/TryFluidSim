@@ -1,4 +1,5 @@
 #include "TriangleRotWindow.h"
+#include "Blitter.h"
 #include "RenderTargetBuffer.h"
 #include "ShaderProgram.h"
 #include "Texture.h"
@@ -17,7 +18,6 @@ TriangleRotWindow::TriangleRotWindow(QWindow* _parent) : OpenGLWindow(_parent)
 TriangleRotWindow::~TriangleRotWindow()
 {
     delete m_tri;
-    delete m_quad;
 
     if ( m_renderTargetBuffer )
     {
@@ -28,6 +28,10 @@ TriangleRotWindow::~TriangleRotWindow()
     {
         delete m_targetTexture;
     }
+
+    delete m_triangleProgram;
+
+    delete m_blitter;
 }
 
 void TriangleRotWindow::initialize()
@@ -35,11 +39,11 @@ void TriangleRotWindow::initialize()
     glEnable(GL_DEPTH_TEST);
 
     m_triangleProgram = new ShaderProgram(m_sampleTriangleVertShaderFileName, m_sampleTriangleFragShaderFileName);
-    m_screenProgram = new ShaderProgram(m_blitToScreenQuadVertShaderFileName, m_blitToScreenQuadFragShaderFileName);
 
     SetupRenderTargetFBO();
-    SetupScreenQuad();
     SetupTriangle();
+
+    m_blitter = new Blitter;
 }
 
 void TriangleRotWindow::render()
@@ -50,12 +54,7 @@ void TriangleRotWindow::render()
     m_renderTargetBuffer->Bind();
     DrawRotatingTriangle();
 
-    // Blit texture to screen
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDisable(GL_DEPTH_TEST); // Disable depth test so screen space quad is not discarded due to depth test
-    glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    DrawScreenQuad();
+    m_blitter->Blit(m_targetTexture, 1);
 
     ++m_frame;
 }
@@ -63,8 +62,8 @@ void TriangleRotWindow::render()
 void TriangleRotWindow::cleanup()
 {
     CleanUpRenderTargetFBO();
-    m_quad->CleanUp();
     m_tri->CleanUp();
+    m_blitter->CleanUp();
 }
 
 void TriangleRotWindow::HandleViewPortUpdated()
@@ -120,25 +119,6 @@ void TriangleRotWindow::SetupTriangle()
     m_tri = new TrisObject(triVertices);
 }
 
-void TriangleRotWindow::SetupScreenQuad()
-{
-    std::vector<Tri> quadVertices = {
-             // positions          // colors                 // texCoords
-        {
-            {{-1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
-            {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-            {{ 1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
-        },
-        {
-            {{-1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
-            {{ 1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
-        }
-    };
-    m_quad = new TrisObject(quadVertices);
-}
-
-
 void TriangleRotWindow::DrawRotatingTriangle()
 {
     m_triangleProgram->Bind();
@@ -154,20 +134,4 @@ void TriangleRotWindow::DrawRotatingTriangle()
     m_tri->Draw();
 
     m_triangleProgram->Release();
-}
-
-///
-/// \brief FluidSimWindow::DrawScreenQuad
-///
-void TriangleRotWindow::DrawScreenQuad()
-{
-    // Bind texture at m_handles[1] to context
-    m_targetTexture->Bind(1);
-
-    m_screenProgram->Bind();
-    m_screenProgram->SetUniform("screenTexture", static_cast<int>(m_targetTexture->GetId(1))); // Bind texture unit GL_TEXTURE0 + 1 of bound texture as uniform
-
-    m_quad->Draw();
-
-    m_screenProgram->Release();
 }
