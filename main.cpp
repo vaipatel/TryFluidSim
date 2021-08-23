@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 #else
     ImageTextureWindow imgTexWindow;
     imgTexWindow.setFormat(format);
-    imgTexWindow.resize(480, 360);
+    imgTexWindow.resize(500, 500);
     imgTexWindow.show();
     imgTexWindow.setAnimating(true);
 #endif

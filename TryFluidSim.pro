@@ -37,11 +37,13 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
+    Resources/Images/perlin_noise_texture-500x500.png \
+    Resources/Images/Moscow_traffic_congestion.JPG \
+    Resources/Images/red_pepper_strip.png \
     Resources/Shaders/SampleTriangle.vert \
     Resources/Shaders/SampleTriangle.frag \
     Resources/Shaders/BlitToScreenQuad.vert \
-    Resources/Shaders/BlitToScreenQuad.frag \
-    Resources/Images/Moscow_traffic_congestion.JPG
+    Resources/Shaders/BlitToScreenQuad.frag
 
 RESOURCES += \
     Resources.qrc
