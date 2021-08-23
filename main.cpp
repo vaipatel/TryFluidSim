@@ -14,11 +14,19 @@ int main(int argc, char *argv[])
     format.setVersion(4, 2);
     format.setSamples(16);
 
-    ImageTextureWindow window;
-    window.setFormat(format);
-    window.resize(640, 480);
-    window.show();
-    window.setAnimating(true);
+#if 0
+    TriangleRotWindow triWindow;
+    triWindow.setFormat(format);
+    triWindow.resize(480, 360);
+    triWindow.show();
+    triWindow.setAnimating(true);
+#else
+    ImageTextureWindow imgTexWindow;
+    imgTexWindow.setFormat(format);
+    imgTexWindow.resize(480, 360);
+    imgTexWindow.show();
+    imgTexWindow.setAnimating(true);
+#endif
 
     return app.exec();
 }
