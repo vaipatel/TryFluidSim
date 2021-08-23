@@ -17,16 +17,43 @@ Blitter::~Blitter()
     CleanUp();
 }
 
-void Blitter::Blit(const Texture* _textureToBlit, size_t _texIdx)
+void Blitter::BindTarget(RenderTargetBuffer *_renderTarget)
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
 
-    // Blit texture to screen
-    extraFuncs->glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    extraFuncs->glDisable(GL_DEPTH_TEST); // Disable depth test so screen space quad is not discarded due to depth test
-    extraFuncs->glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
-    extraFuncs->glClear(GL_COLOR_BUFFER_BIT);
+    if ( _renderTarget )
+    {
+        // Draw to target
+        _renderTarget->Bind();
+    }
+    else
+    {
+        // Blit to screen
+        extraFuncs->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        extraFuncs->glDisable(GL_DEPTH_TEST); // Disable depth test so screen space quad is not discarded due to depth test
+        extraFuncs->glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+        extraFuncs->glClear(GL_COLOR_BUFFER_BIT);
+    }
+}
 
+void Blitter::DrawTextureOnScreenQuad(const Texture* _texture, size_t _texIdx)
+{
+    // Bind texture at m_handles[1] to context
+    _texture->Bind(_texIdx);
+
+    m_screenProgram->Bind();
+    int texId = static_cast<int>(_texture->GetId(_texIdx));
+    m_screenProgram->SetUniform("screenTexture", texId); // Bind texture unit GL_TEXTURE0 + texIdx of bound texture as uniform
+
+    m_quad->Draw();
+
+    m_screenProgram->Release();
+}
+
+void Blitter::BlitToScreen(const Texture* _textureToBlit, size_t _texIdx)
+{
+    // Blit texture to screen
+    BindTarget(nullptr);
     DrawTextureOnScreenQuad(_textureToBlit, _texIdx);
 }
 
@@ -61,18 +88,4 @@ void Blitter::SetupScreenQuad()
         }
     };
     m_quad = new TrisObject(quadVertices);
-}
-
-void Blitter::DrawTextureOnScreenQuad(const Texture* _texture, size_t _texIdx)
-{
-    // Bind texture at m_handles[1] to context
-    _texture->Bind(_texIdx);
-
-    m_screenProgram->Bind();
-    int texId = static_cast<int>(_texture->GetId(_texIdx));
-    m_screenProgram->SetUniform("screenTexture", texId); // Bind texture unit GL_TEXTURE0 + texIdx of bound texture as uniform
-
-    m_quad->Draw();
-
-    m_screenProgram->Release();
 }

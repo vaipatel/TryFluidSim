@@ -29,7 +29,7 @@ void ImageTextureWindow::initialize()
 
 void ImageTextureWindow::render()
 {
-    m_blitter->Blit(m_texture);
+    m_blitter->BlitToScreen(m_texture);
 }
 
 void ImageTextureWindow::cleanup()

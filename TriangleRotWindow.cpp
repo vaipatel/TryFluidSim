@@ -51,10 +51,11 @@ void TriangleRotWindow::render()
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Render to texture
-    m_renderTargetBuffer->Bind();
+    m_blitter->BindTarget(m_renderTargetBuffer);
     DrawRotatingTriangle();
 
-    m_blitter->Blit(m_targetTexture, 1);
+    m_blitter->BindTarget(nullptr);
+    m_blitter->DrawTextureOnScreenQuad(m_targetTexture, 1);
 
     ++m_frame;
 }
