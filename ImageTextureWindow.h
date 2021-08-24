@@ -30,7 +30,7 @@ private:
     const QString m_perlinVertShaderFileName = ":/Resources/Shaders/Perlin.vert";
     const QString m_perlinFragShaderFileName = ":/Resources/Shaders/Perlin.frag";
     const QString m_perlinNoiseImgFileName = ":/Resources/Images/perlin_noise_texture-500x500.png";
-    const QString m_redPepperImgFileName = ":/Resources/Images/red_pepper_strip.png";
+    const QString m_redPepperImgFileName = ":/Resources/Images/red_pepper_strip_2.png";
 
     Texture* m_perlinNoiseTexture = nullptr;
     Texture* m_redPepperTexture = nullptr;

@@ -13,13 +13,15 @@ float rand(vec2 co){
 void main()
 {
     vec4 perlinColor = texture(PerlinNoise, TexCoords); //vec4(TexCoords.x, TexCoords.y, 0, 1);
-    float u = perlinColor.r + sin(Time/2);
+    float u = perlinColor.r + Time/10;
     u = fract(u);
     float v = 0.5;
-    vec4 sampledColor = texture(RedPepperStrip, vec2(u, v));
-    if ( sampledColor.g > 0 )
-    {
-        sampledColor = vec4(0,0,0,1);
-    }
+    vec4 color = texture(RedPepperStrip, vec2(u,v));
+    vec4 sampledColor = color;
+
+    // For black BG
+//    float intensity = 1-color.g;
+//    vec4 sampledColor = vec4(intensity, 0, 0, 1);
+
     FragColor = sampledColor;
 }

@@ -9,5 +9,6 @@
         <file>Resources/Images/red_pepper_strip.png</file>
         <file>Resources/Shaders/Perlin.frag</file>
         <file>Resources/Shaders/Perlin.vert</file>
+        <file>Resources/Images/red_pepper_strip_2.png</file>
     </qresource>
 </RCC>
