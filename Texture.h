@@ -31,9 +31,9 @@ public:
         void* m_data;
     };
 
-    Texture(int _width, int _height, GLenum _format, GLenum _type, const char *_data);
-    Texture(const std::vector<TextureData>& _dataForTextures);
-    Texture(const QString& _imageFileName);
+    Texture(int _width, int _height, GLenum _format, GLenum _type, const char *_data, unsigned int _textureIdOffset = 0);
+    Texture(const std::vector<TextureData>& _dataForTextures, unsigned int _textureIdOffset = 0);
+    Texture(const QString& _imageFileName, unsigned int _textureIdOffset = 0);
     ~Texture();
 
     void Bind(size_t _textureIdx = 0) const;
@@ -49,7 +49,7 @@ public:
     GLint GetInternalFormat(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_internalFormat; }
 
 private:
-    void Construct(const std::vector<TextureData>& _dataForTextures);
+    void Construct(const std::vector<TextureData>& _dataForTextures, unsigned int _textureIdOffset = 0);
     static GLenum CalcFormat(GLint _internalFormat);
     static size_t CalcNumComponents(GLenum _format);
     static size_t CalcPerComponentSize(GLenum _type);

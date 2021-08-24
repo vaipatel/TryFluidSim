@@ -7,5 +7,7 @@
         <file>Resources/Images/Moscow_traffic_congestion.JPG</file>
         <file>Resources/Images/perlin_noise_texture-500x500.png</file>
         <file>Resources/Images/red_pepper_strip.png</file>
+        <file>Resources/Shaders/Perlin.frag</file>
+        <file>Resources/Shaders/Perlin.vert</file>
     </qresource>
 </RCC>

@@ -5,17 +5,17 @@
 #include <QOpenGLExtraFunctions>
 #include <QString>
 
-Texture::Texture(int _width, int _height, GLenum _format, GLenum _type, const char *_data)
+Texture::Texture(int _width, int _height, GLenum _format, GLenum _type, const char *_data, unsigned int _textureIdOffset)
 {
-     Construct({{_width, _height, _format, _type, _data}});
+     Construct({{_width, _height, _format, _type, _data}}, _textureIdOffset);
 }
 
-Texture::Texture(const std::vector<TextureData>& _dataForTextures)
+Texture::Texture(const std::vector<TextureData>& _dataForTextures, unsigned int _textureIdOffset)
 {
-    Construct(_dataForTextures);
+    Construct(_dataForTextures, _textureIdOffset);
 }
 
-Texture::Texture(const QString& _imageFileName)
+Texture::Texture(const QString& _imageFileName, unsigned int _textureIdOffset)
 {
     QImage image(_imageFileName);
     image = image.convertToFormat(QImage::Format_RGBA8888);
@@ -24,7 +24,7 @@ Texture::Texture(const QString& _imageFileName)
 
     const uchar* srcData = image.constBits();
     TextureData texData = {image.width(), image.height(), GL_RGBA, type, srcData};
-    Construct({texData});
+    Construct({texData}, _textureIdOffset);
 }
 
 
@@ -63,7 +63,7 @@ void Texture::CleanUp()
     }
 }
 
-void Texture::Construct(const std::vector<TextureData> &_dataForTextures)
+void Texture::Construct(const std::vector<TextureData> &_dataForTextures, unsigned int _textureIdOffset)
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
     m_numTextures = _dataForTextures.size();
@@ -78,7 +78,7 @@ void Texture::Construct(const std::vector<TextureData> &_dataForTextures)
         Q_ASSERT_X(dataAtIdx.m_type != GL_NONE, __FUNCTION__, QString("Texture type for texture %1 cannot be none.").arg(textureIdx).toUtf8().constData());
 
         StoredTextureData storedDataAtIdx;
-        storedDataAtIdx.m_id = static_cast<unsigned int>(textureIdx);
+        storedDataAtIdx.m_id = static_cast<unsigned int>(textureIdx) + _textureIdOffset;
         storedDataAtIdx.m_width = dataAtIdx.m_width;
         storedDataAtIdx.m_height = dataAtIdx.m_height;
         storedDataAtIdx.m_type = dataAtIdx.m_type;

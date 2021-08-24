@@ -40,6 +40,8 @@ DISTFILES += \
     Resources/Images/perlin_noise_texture-500x500.png \
     Resources/Images/Moscow_traffic_congestion.JPG \
     Resources/Images/red_pepper_strip.png \
+    Resources/Shaders/Perlin.frag \
+    Resources/Shaders/Perlin.vert \
     Resources/Shaders/SampleTriangle.vert \
     Resources/Shaders/SampleTriangle.frag \
     Resources/Shaders/BlitToScreenQuad.vert \
