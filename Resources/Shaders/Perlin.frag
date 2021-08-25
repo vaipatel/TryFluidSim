@@ -13,8 +13,9 @@ float rand(vec2 co){
 void main()
 {
     vec4 perlinColor = texture(PerlinNoise, TexCoords); //vec4(TexCoords.x, TexCoords.y, 0, 1);
-    float u = perlinColor.r + Time/10;
+    float u = perlinColor.r + Time;
     u = fract(u);
+//    u = clamp(u, 0.5, 0.6);
     float v = 0.5;
     vec4 color = texture(RedPepperStrip, vec2(u,v));
     vec4 sampledColor = color;
