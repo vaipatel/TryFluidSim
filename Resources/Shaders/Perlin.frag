@@ -20,8 +20,8 @@ void main()
     vec4 sampledColor = color;
 
     // For black BG
-//    float intensity = 1-color.g;
-//    vec4 sampledColor = vec4(intensity, 0, 0, 1);
+    float intensity = 1-color.g;
+    sampledColor = vec4(intensity, 0, 0, 1);
 
     FragColor = sampledColor;
 }
