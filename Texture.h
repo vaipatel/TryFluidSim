@@ -22,7 +22,7 @@ class Texture
 public:
     struct StoredTextureData
     {
-        unsigned int m_id;
+        unsigned int m_unitId;
         GLint m_internalFormat;
         int m_width;
         int m_height;
@@ -41,7 +41,7 @@ public:
 
     size_t GetNumTextures() const { return m_numTextures; }
     unsigned int GetHandle(size_t _textureIdx) const { Q_ASSERT(_textureIdx < m_numTextures); return m_handles[_textureIdx]; }
-    unsigned int GetId(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_id; }
+    unsigned int GetUnitId(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_unitId; }
     int GetWidth(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_width; }
     int GetHeight(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_height; }
     GLenum GetFormat(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_format; }

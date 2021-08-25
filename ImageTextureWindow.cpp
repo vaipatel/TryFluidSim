@@ -65,12 +65,12 @@ void ImageTextureWindow::render()
 
     int texIdx = 0;
     m_perlinNoiseTexture->Bind(texIdx);
-    int perlinTexId = static_cast<int>(m_perlinNoiseTexture->GetId(texIdx));
-    m_perlinProgram->SetUniform("PerlinNoise", perlinTexId);
+    int perlinTexUnitId = static_cast<int>(m_perlinNoiseTexture->GetUnitId(texIdx));
+    m_perlinProgram->SetUniform("PerlinNoise", perlinTexUnitId);
     m_redPepperTexture->Bind(texIdx);
-    int redPepperTexId = static_cast<int>(m_redPepperTexture->GetId(texIdx));
-    m_perlinProgram->SetUniform("RedPepperStrip", redPepperTexId);
     m_timeS += 1/(screen()->refreshRate());
+    int redPepperTexUnitId = static_cast<int>(m_redPepperTexture->GetUnitId(texIdx));
+    m_perlinProgram->SetUniform("RedPepperStrip", redPepperTexUnitId);
     m_perlinProgram->SetUniform("Time", m_timeS);
 
     m_quad->Draw();

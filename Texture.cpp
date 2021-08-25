@@ -39,7 +39,7 @@ Texture::~Texture()
 void Texture::Bind(size_t _textureIdx) const
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-    extraFuncs->glActiveTexture(GL_TEXTURE0 + GetId(_textureIdx));
+    extraFuncs->glActiveTexture(GL_TEXTURE0 + GetUnitId(_textureIdx));
     extraFuncs->glBindTexture(GL_TEXTURE_2D, GetHandle(_textureIdx));
 }
 
@@ -78,7 +78,7 @@ void Texture::Construct(const std::vector<TextureData> &_dataForTextures, unsign
         Q_ASSERT_X(dataAtIdx.m_type != GL_NONE, __FUNCTION__, QString("Texture type for texture %1 cannot be none.").arg(textureIdx).toUtf8().constData());
 
         StoredTextureData storedDataAtIdx;
-        storedDataAtIdx.m_id = static_cast<unsigned int>(textureIdx) + _textureIdOffset;
+        storedDataAtIdx.m_unitId = static_cast<unsigned int>(textureIdx) + _textureIdOffset;
         storedDataAtIdx.m_width = dataAtIdx.m_width;
         storedDataAtIdx.m_height = dataAtIdx.m_height;
         storedDataAtIdx.m_type = dataAtIdx.m_type;
@@ -105,7 +105,7 @@ void Texture::Construct(const std::vector<TextureData> &_dataForTextures, unsign
         m_storedTextureData.push_back(storedDataAtIdx);
 
         // !!! I HAVE to set the active texture unit before binding !!!
-        extraFuncs->glActiveTexture(GL_TEXTURE0 + storedDataAtIdx.m_id);
+        extraFuncs->glActiveTexture(GL_TEXTURE0 + storedDataAtIdx.m_unitId);
         extraFuncs->glBindTexture(GL_TEXTURE_2D, m_handles[textureIdx]);
         extraFuncs->glTexImage2D(GL_TEXTURE_2D,
                                  0,
