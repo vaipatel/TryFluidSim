@@ -43,6 +43,8 @@ DISTFILES += \
     Resources/Images/red_pepper_strip_2.png \
     Resources/Shaders/Perlin.frag \
     Resources/Shaders/Perlin.vert \
+    Resources/Shaders/RotTexturedTri.frag \
+    Resources/Shaders/RotTexturedTri.vert \
     Resources/Shaders/SampleTriangle.vert \
     Resources/Shaders/SampleTriangle.frag \
     Resources/Shaders/BlitToScreenQuad.vert \

@@ -10,5 +10,7 @@
         <file>Resources/Shaders/Perlin.frag</file>
         <file>Resources/Shaders/Perlin.vert</file>
         <file>Resources/Images/red_pepper_strip_2.png</file>
+        <file>Resources/Shaders/RotTexturedTri.frag</file>
+        <file>Resources/Shaders/RotTexturedTri.vert</file>
     </qresource>
 </RCC>
