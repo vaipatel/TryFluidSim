@@ -59,25 +59,13 @@ void ImageTextureWindow::initialize()
 
 void ImageTextureWindow::render()
 {
-    m_renderTargetBuffer->Bind();
+    m_blitter->BindTarget(m_renderTargetBuffer);
+    DrawPerlinNoiseOnQuad();
 
-    m_perlinProgram->Bind();
 
-    int texIdx = 0;
-    m_perlinNoiseTexture->Bind(texIdx);
-    int perlinTexUnitId = static_cast<int>(m_perlinNoiseTexture->GetUnitId(texIdx));
-    m_perlinProgram->SetUniform("PerlinNoise", perlinTexUnitId);
-    m_redPepperTexture->Bind(texIdx);
-    m_timeS += 1/(screen()->refreshRate());
-    int redPepperTexUnitId = static_cast<int>(m_redPepperTexture->GetUnitId(texIdx));
-    m_perlinProgram->SetUniform("RedPepperStrip", redPepperTexUnitId);
-    m_perlinProgram->SetUniform("Time", m_timeS);
-
-    m_quad->Draw();
-
-    m_perlinProgram->Release();
     
-    m_blitter->BlitToScreen(m_targetTexture);
+    m_blitter->BindTarget(nullptr);
+    m_blitter->DrawTextureOnScreenQuad(m_targetTexture);
 }
 
 void ImageTextureWindow::cleanup()
@@ -154,5 +142,30 @@ void ImageTextureWindow::SetupQuad()
         }
     };
     m_quad = new TrisObject(quadVertices);
+}
+
+void ImageTextureWindow::DrawPerlinNoiseOnQuad()
+{
+    // Bind the shader program
+    m_perlinProgram->Bind();
+
+    // Pass the noise and strip textures as sampler2D uniforms
+    size_t texIdx = 0;
+    m_perlinNoiseTexture->Bind(texIdx);
+    int perlinTexUnitId = static_cast<int>(m_perlinNoiseTexture->GetUnitId(texIdx));
+    m_perlinProgram->SetUniform("PerlinNoise", perlinTexUnitId);
+    m_redPepperTexture->Bind(texIdx);
+    int redPepperTexUnitId = static_cast<int>(m_redPepperTexture->GetUnitId(texIdx));
+    m_perlinProgram->SetUniform("RedPepperStrip", redPepperTexUnitId);
+
+    // Pass time
+    m_timeS += static_cast<float>(1/(screen()->refreshRate()));
+    m_perlinProgram->SetUniform("Time", m_timeS);
+
+    // Draw the quad
+    m_quad->Draw();
+
+    // Unbind the shader program
+    m_perlinProgram->Release();
 }
 

@@ -26,6 +26,7 @@ private:
     void CleanUpTexture();
     void SetupTexture();
     void SetupQuad();
+    void DrawPerlinNoiseOnQuad();
 
     const QString m_perlinVertShaderFileName = ":/Resources/Shaders/Perlin.vert";
     const QString m_perlinFragShaderFileName = ":/Resources/Shaders/Perlin.frag";
