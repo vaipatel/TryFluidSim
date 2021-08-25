@@ -217,7 +217,7 @@ void ImageTextureWindow::DrawTriangle()
     // Pass rotating matrix to vert shader
     QMatrix4x4 matrix;
     matrix.perspective(60.0f, m_viewAspect, 0.1f, 100.0f);
-    matrix.translate(0, 0, -4);
+    matrix.translate(0, 0, -2);
     float angle = 100.f * m_timeS;
     matrix.rotate(angle, 0, 1, 0);
     m_triangleProgram->SetUniform("matrix", matrix);
