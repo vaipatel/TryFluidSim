@@ -2,6 +2,7 @@
 #include "Blitter.h"
 #include "RenderTargetBuffer.h"
 #include "ShaderProgram.h"
+#include "Shared.h"
 #include "Texture.h"
 #include "TrisObject.h"
 #include <QOpenGLExtraFunctions>
@@ -18,19 +19,9 @@ TriangleRotWindow::TriangleRotWindow(QWindow* _parent) : OpenGLWindow(_parent)
 TriangleRotWindow::~TriangleRotWindow()
 {
     delete m_tri;
-
-    if ( m_renderTargetBuffer )
-    {
-        delete m_renderTargetBuffer;
-    }
-
-    if ( m_targetTexture )
-    {
-        delete m_targetTexture;
-    }
-
+    delete m_renderTargetBuffer;
+    delete m_targetTexture;
     delete m_triangleProgram;
-
     delete m_blitter;
 }
 
@@ -82,17 +73,8 @@ void TriangleRotWindow::HandleViewPortUpdated()
 
 void TriangleRotWindow::CleanUpRenderTargetFBO()
 {
-    if ( m_renderTargetBuffer )
-    {
-        delete m_renderTargetBuffer;
-        m_renderTargetBuffer = nullptr;
-    }
-
-    if ( m_targetTexture )
-    {
-        delete m_targetTexture;
-        m_targetTexture = nullptr;
-    }
+    SafeDelete(m_renderTargetBuffer);
+    SafeDelete(m_targetTexture);
 }
 
 void TriangleRotWindow::SetupRenderTargetFBO()

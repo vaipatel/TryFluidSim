@@ -14,6 +14,7 @@ SOURCES += \
     OpenGLWindow.cpp \
     RenderTargetBuffer.cpp \
     ShaderProgram.cpp \
+    Shared.cpp \
     Texture.cpp \
     TriangleRotWindow.cpp \
     TrisObject.cpp \
@@ -25,6 +26,7 @@ HEADERS += \
     OpenGLWindow.h \
     RenderTargetBuffer.h \
     ShaderProgram.h \
+    Shared.h \
     Texture.h \
     TriangleRotWindow.h \
     TrisObject.h

@@ -10,7 +10,6 @@ RenderTargetBuffer::RenderTargetBuffer(Texture* _targetTexture) :
     size_t numTextures = m_targetTexture->GetNumTextures();
     Q_ASSERT(numTextures > 0);
 
-
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
 
     extraFuncs->glGenFramebuffers(1, &m_targetFBO);

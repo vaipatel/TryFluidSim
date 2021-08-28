@@ -2,6 +2,7 @@
 #include "Blitter.h"
 #include "RenderTargetBuffer.h"
 #include "ShaderProgram.h"
+#include "Shared.h"
 #include "Texture.h"
 #include "TrisObject.h"
 #include <QMatrix4x4>
@@ -15,41 +16,13 @@ ImageTextureWindow::ImageTextureWindow(QWindow* _parent) : OpenGLWindow(_parent)
 
 ImageTextureWindow::~ImageTextureWindow()
 {
-    if ( m_perlinNoiseTexture )
-    {
-        delete m_perlinNoiseTexture;
-    }
-
-    if ( m_redPepperTexture )
-    {
-        delete m_redPepperTexture;
-    }
-
-    if ( m_blitter )
-    {
-        delete m_blitter;
-    }
-
-    if ( m_perlinTargetBuffer )
-    {
-        delete m_perlinTargetBuffer;
-    }
-
-    if ( m_perlinOutTexture )
-    {
-        delete m_perlinOutTexture;
-    }
-
-    if ( m_quad )
-    {
-         delete m_quad;
-    }
-
-    if ( m_tri )
-    {
-         delete m_tri;
-    }
-
+    delete m_perlinNoiseTexture;
+    delete m_redPepperTexture;
+    delete m_blitter;
+    delete m_perlinTargetBuffer;
+    delete m_perlinOutTexture;
+    delete m_quad;
+    delete m_tri;
     delete m_perlinProgram;
     delete m_triangleProgram;
 }
@@ -99,54 +72,33 @@ void ImageTextureWindow::HandleViewPortUpdated()
 
 void ImageTextureWindow::CleanUpTexture()
 {
-    if ( m_perlinNoiseTexture )
-    {
-        delete m_perlinNoiseTexture;
-        m_perlinNoiseTexture = nullptr;
-    }
-    
-    if ( m_redPepperTexture )
-    {
-        delete m_redPepperTexture;
-        m_redPepperTexture = nullptr;
-    }
-    
-    if ( m_perlinTargetBuffer )
-    {
-        delete m_perlinTargetBuffer;
-        m_perlinTargetBuffer = nullptr;
-    }
-    
-    if ( m_perlinOutTexture )
-    {
-        delete m_perlinOutTexture;
-        m_perlinOutTexture = nullptr;
-    }
+    // Delete input textures
+    SafeDelete(m_perlinNoiseTexture);
+    SafeDelete(m_redPepperTexture);
 
-    if ( m_triTargetBuffer )
-    {
-        delete m_triTargetBuffer;
-        m_triTargetBuffer = nullptr;
-    }
+    // Delete perlin target
+    SafeDelete(m_perlinTargetBuffer);
+    SafeDelete(m_perlinOutTexture);
 
-    if ( m_triOutTexture )
-    {
-        delete m_triOutTexture;
-        m_triOutTexture = nullptr;
-    }
+    // Delete triangle target
+    SafeDelete(m_triTargetBuffer);
+    SafeDelete(m_triOutTexture);
 }
 
 void ImageTextureWindow::SetupTexture()
 {
+    // Create input textures
     m_perlinNoiseTexture = new Texture(m_perlinNoiseImgFileName, 0);
     m_redPepperTexture = new Texture(m_redPepperImgFileName, 1);
     
+    // Create perlin target
     m_perlinOutTexture = new Texture({{m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, nullptr}});
     m_perlinTargetBuffer = new RenderTargetBuffer(m_perlinOutTexture);
     m_perlinTargetBuffer->SetDepthTestEnabled(false);
     m_perlinTargetBuffer->SetClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
     m_perlinTargetBuffer->SetClearColor({38, 38, 38, 255});
 
+    // Create triangle target
     m_triOutTexture = new Texture({{m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, nullptr}});
     m_triTargetBuffer = new RenderTargetBuffer(m_triOutTexture);
     m_triTargetBuffer->SetDepthTestEnabled(false);

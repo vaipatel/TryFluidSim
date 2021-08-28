@@ -1,5 +1,5 @@
 #include "OpenGLWindow.h"
-
+#include "Shared.h"
 #include <QOpenGLContext>
 #include <QOpenGLPaintDevice>
 #include <QPainter>
@@ -15,11 +15,8 @@ OpenGLWindow::OpenGLWindow(QWindow* _parent)
 
 OpenGLWindow::~OpenGLWindow()
 {
-    if ( m_device )
-    {
-        delete m_device;
-        m_device = nullptr;
-    }
+    SafeDelete(m_device);
+    SafeDelete(m_context);
 }
 
 void OpenGLWindow::render(QPainter* _painter)
