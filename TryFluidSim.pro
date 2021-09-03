@@ -10,6 +10,8 @@ CONFIG += c++11
 
 SOURCES += \
     Blitter.cpp \
+    DoubleRenderTargetBuffer.cpp \
+    FluidSimWindow.cpp \
     ImageTextureWindow.cpp \
     OpenGLWindow.cpp \
     RenderTargetBuffer.cpp \
@@ -22,6 +24,8 @@ SOURCES += \
 
 HEADERS += \
     Blitter.h \
+    DoubleRenderTargetBuffer.h \
+    FluidSimWindow.h \
     ImageTextureWindow.h \
     OpenGLWindow.h \
     RenderTargetBuffer.h \
@@ -43,6 +47,8 @@ DISTFILES += \
     Resources/Images/Moscow_traffic_congestion.JPG \
     Resources/Images/red_pepper_strip.png \
     Resources/Images/red_pepper_strip_2.png \
+    Resources/Shaders/FluidAdvect.frag \
+    Resources/Shaders/FluidBaseVertexShader.vert \
     Resources/Shaders/Perlin.frag \
     Resources/Shaders/Perlin.vert \
     Resources/Shaders/RotTexturedTri.frag \

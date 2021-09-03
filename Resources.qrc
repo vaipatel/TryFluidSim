@@ -12,5 +12,7 @@
         <file>Resources/Images/red_pepper_strip_2.png</file>
         <file>Resources/Shaders/RotTexturedTri.frag</file>
         <file>Resources/Shaders/RotTexturedTri.vert</file>
+        <file>Resources/Shaders/FluidBaseVertexShader.vert</file>
+        <file>Resources/Shaders/FluidAdvect.frag</file>
     </qresource>
 </RCC>
