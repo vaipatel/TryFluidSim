@@ -24,22 +24,29 @@ protected:
     void HandleViewPortUpdated() override;
 
 private:
+    void SetupQuad();
+
+    const QString m_baseVertShaderFileName = ":/Resources/Shaders/FluidBaseVertexShader.vert";
+    const QString m_advectFragShaderFileName = ":/Resources/Shaders/FluidAdvect.frag";
+    const QString m_perlinNoiseImgFileName = ":/Resources/Images/perlin_noise_texture-500x500.png";
+    const QString m_moscowImgFileName = ":/Resources/Images/Moscow_traffic_congestion.JPG";
+
     // Convenience for blitting to framebuffer of choice
     Blitter* m_blitter = nullptr;
 
     // Input textures
-    Texture* m_perlinNoiseTexture = nullptr;
-    Texture* m_redPepperTexture = nullptr;
-
     RenderTargetBuffer* m_velocityTargetBufferA = nullptr;
     Texture* m_velocityOutTextureA = nullptr;
     RenderTargetBuffer* m_velocityTargetBufferB = nullptr;
     Texture* m_velocityOutTextureB = nullptr;
     DoubleRenderTargetBuffer* m_velocityDoubleTargetBuffer = nullptr;
+    Texture* m_uVelocityInputTexture = nullptr;
+    Texture* m_uSourceInputTexture = nullptr;
 
-//    Texture* m_perlinOutTexture = nullptr;
-//    ShaderProgram* m_perlinProgram = nullptr;
-//    TrisObject* m_quad = nullptr;
+
+    ShaderProgram* m_advectProgram = nullptr;
+
+    TrisObject* m_quad = nullptr;
 
 //    // Triangle stage
 //    RenderTargetBuffer* m_triTargetBuffer = nullptr;
