@@ -6,6 +6,12 @@
 
 struct TextureData
 {
+    enum class FilterParam
+    {
+        NEAREST = GL_NEAREST,
+        LINEAR = GL_LINEAR
+    };
+
     // I might need some level of the following commented out params if I want to be able to
     // flexibly pass in the internal format instead of the format.
 //    bool m_needsFormatCalc;
@@ -14,6 +20,7 @@ struct TextureData
     int m_height;
     GLenum m_format;
     GLenum m_type;
+    FilterParam m_filterParam; //!< Param to use for GL_TEXTURE_MAG_FILTER and GL_TEXTURE_MIN_FILTER
     const void* m_data;
 };
 
@@ -28,12 +35,13 @@ public:
         int m_height;
         GLenum m_format;
         GLenum m_type;
+        GLint m_filterParam; //!< Param to use for GL_TEXTURE_MAG_FILTER and GL_TEXTURE_MIN_FILTER
         void* m_data;
     };
 
-    Texture(int _width, int _height, GLenum _format, GLenum _type, const char *_data, unsigned int _textureIdOffset = 0);
+    Texture(int _width, int _height, GLenum _format, GLenum _type, TextureData::FilterParam _filterParam, const char *_data, unsigned int _textureIdOffset = 0);
     Texture(const std::vector<TextureData>& _dataForTextures, unsigned int _textureIdOffset = 0);
-    Texture(const QString& _imageFileName, unsigned int _textureIdOffset = 0);
+    Texture(const QString& _imageFileName, TextureData::FilterParam _filterParam, unsigned int _textureIdOffset = 0);
     ~Texture();
 
     void Bind(size_t _textureIdx = 0) const;

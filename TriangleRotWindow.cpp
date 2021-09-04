@@ -79,8 +79,8 @@ void TriangleRotWindow::CleanUpRenderTargetFBO()
 
 void TriangleRotWindow::SetupRenderTargetFBO()
 {
-    m_targetTexture = new Texture({{m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, nullptr},
-                                   {m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, nullptr}});
+    m_targetTexture = new Texture({{m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, TextureData::FilterParam::NEAREST, nullptr},
+                                   {m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, TextureData::FilterParam::NEAREST, nullptr}});
 
     m_renderTargetBuffer = new RenderTargetBuffer(m_targetTexture);
 

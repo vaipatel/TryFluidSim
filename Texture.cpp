@@ -5,9 +5,9 @@
 #include <QOpenGLExtraFunctions>
 #include <QString>
 
-Texture::Texture(int _width, int _height, GLenum _format, GLenum _type, const char *_data, unsigned int _textureIdOffset)
+Texture::Texture(int _width, int _height, GLenum _format, GLenum _type, TextureData::FilterParam _filterParam, const char *_data, unsigned int _textureIdOffset)
 {
-     Construct({{_width, _height, _format, _type, _data}}, _textureIdOffset);
+     Construct({{_width, _height, _format, _type, _filterParam, _data}}, _textureIdOffset);
 }
 
 Texture::Texture(const std::vector<TextureData>& _dataForTextures, unsigned int _textureIdOffset)
@@ -15,7 +15,7 @@ Texture::Texture(const std::vector<TextureData>& _dataForTextures, unsigned int 
     Construct(_dataForTextures, _textureIdOffset);
 }
 
-Texture::Texture(const QString& _imageFileName, unsigned int _textureIdOffset)
+Texture::Texture(const QString& _imageFileName, TextureData::FilterParam _filterParam, unsigned int _textureIdOffset)
 {
     QImage image(_imageFileName);
     image = image.convertToFormat(QImage::Format_RGBA8888);
@@ -23,7 +23,7 @@ Texture::Texture(const QString& _imageFileName, unsigned int _textureIdOffset)
     GLenum type = GL_UNSIGNED_BYTE;
 
     const uchar* srcData = image.constBits();
-    TextureData texData = {image.width(), image.height(), GL_RGBA, type, srcData};
+    TextureData texData = {image.width(), image.height(), GL_RGBA, type, _filterParam, srcData};
     Construct({texData}, _textureIdOffset);
 }
 
@@ -82,6 +82,7 @@ void Texture::Construct(const std::vector<TextureData> &_dataForTextures, unsign
         storedDataAtIdx.m_width = dataAtIdx.m_width;
         storedDataAtIdx.m_height = dataAtIdx.m_height;
         storedDataAtIdx.m_type = dataAtIdx.m_type;
+        storedDataAtIdx.m_filterParam = static_cast<GLint>(dataAtIdx.m_filterParam);
 
         // If we might pass internal format instead of format, do this conditionally.
         Q_ASSERT_X(dataAtIdx.m_format != GL_NONE, __FUNCTION__, QString("Format for texture %1 cannot be none.").arg(textureIdx).toUtf8().constData());
@@ -118,8 +119,8 @@ void Texture::Construct(const std::vector<TextureData> &_dataForTextures, unsign
                                  storedDataAtIdx.m_data);
 
         // Setting to GL_NEAREST, seems to be desirable for render target applications.
-        extraFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        extraFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        extraFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, storedDataAtIdx.m_filterParam);
+        extraFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, storedDataAtIdx.m_filterParam);
 
         // Unbind
         extraFuncs->glBindTexture(GL_TEXTURE_2D, 0);

@@ -88,18 +88,18 @@ void ImageTextureWindow::CleanUpTexture()
 void ImageTextureWindow::SetupTexture()
 {
     // Create input textures
-    m_perlinNoiseTexture = new Texture(m_perlinNoiseImgFileName, 0);
-    m_redPepperTexture = new Texture(m_redPepperImgFileName, 1);
+    m_perlinNoiseTexture = new Texture(m_perlinNoiseImgFileName, TextureData::FilterParam::NEAREST, 0);
+    m_redPepperTexture = new Texture(m_redPepperImgFileName, TextureData::FilterParam::NEAREST, 1);
     
     // Create perlin target
-    m_perlinOutTexture = new Texture({{m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, nullptr}});
+    m_perlinOutTexture = new Texture({{m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, TextureData::FilterParam::LINEAR, nullptr}});
     m_perlinTargetBuffer = new RenderTargetBuffer(m_perlinOutTexture);
     m_perlinTargetBuffer->SetDepthTestEnabled(false);
     m_perlinTargetBuffer->SetClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
     m_perlinTargetBuffer->SetClearColor({38, 38, 38, 255});
 
     // Create triangle target
-    m_triOutTexture = new Texture({{m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, nullptr}});
+    m_triOutTexture = new Texture({{m_viewWidth, m_viewHeight, GL_RGBA, GL_UNSIGNED_BYTE, TextureData::FilterParam::LINEAR, nullptr}});
     m_triTargetBuffer = new RenderTargetBuffer(m_triOutTexture);
     m_triTargetBuffer->SetDepthTestEnabled(false);
     m_triTargetBuffer->SetClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
