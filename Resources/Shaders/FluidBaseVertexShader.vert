@@ -1,14 +1,13 @@
 #version 330 core
 
-precision highp float;
-in vec3 VertexPosition;
-in vec2 VertexTexCoords;
-out vec2 vUv;
-out vec2 vL;
-out vec2 vR;
-out vec2 vT;
-out vec2 vB;
-uniform vec2 texelSize;
+in highp vec3 VertexPosition;
+in highp vec2 VertexTexCoords;
+out highp vec2 vUv;
+out highp vec2 vL;
+out highp vec2 vR;
+out highp vec2 vT;
+out highp vec2 vB;
+uniform highp vec2 texelSize;
 
 void main ()
 {
