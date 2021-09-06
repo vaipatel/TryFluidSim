@@ -1,13 +1,20 @@
 #include "DoubleRenderTargetBuffer.h"
 #include "RenderTargetBuffer.h"
+#include "Texture.h"
 
-DoubleRenderTargetBuffer::DoubleRenderTargetBuffer(RenderTargetBuffer* _fboA, RenderTargetBuffer* _fboB)
+DoubleRenderTargetBuffer::DoubleRenderTargetBuffer(Texture *_texA, Texture *_texB)
 {
-    m_firstFBO = _fboA;
-    m_secondFBO = _fboB;
+    m_firstFBO = new RenderTargetBuffer(_texA);
+    m_secondFBO = new RenderTargetBuffer(_texB);
 }
 
-void DoubleRenderTargetBuffer::Swap()
+DoubleRenderTargetBuffer::~DoubleRenderTargetBuffer()
+{
+    delete m_firstFBO;
+    delete m_secondFBO;
+}
+
+void DoubleRenderTargetBuffer::SwapBuffers()
 {
     RenderTargetBuffer* temp = m_secondFBO;
     m_secondFBO = m_firstFBO;

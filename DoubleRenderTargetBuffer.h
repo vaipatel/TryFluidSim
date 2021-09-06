@@ -1,14 +1,21 @@
 #ifndef DOUBLERENDERTARGETBUFFER_H
 #define DOUBLERENDERTARGETBUFFER_H
 
+#include <vector>
+
 class RenderTargetBuffer;
+class Texture;
 
 class DoubleRenderTargetBuffer
 {
 public:
-    DoubleRenderTargetBuffer(RenderTargetBuffer* _fboA, RenderTargetBuffer* _fboB);
+    DoubleRenderTargetBuffer(Texture* _texA, Texture* _texB);
+    ~DoubleRenderTargetBuffer();
+
     RenderTargetBuffer* GetFirst() const { return m_firstFBO; }
-    void Swap();
+    RenderTargetBuffer* GetSecond() const { return m_secondFBO; }
+    std::vector<RenderTargetBuffer*> GetBoth() const { return {m_firstFBO, m_secondFBO}; }
+    void SwapBuffers();
 
 private:
     RenderTargetBuffer* m_firstFBO = nullptr;

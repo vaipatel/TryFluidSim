@@ -24,6 +24,8 @@ protected:
     void HandleViewPortUpdated() override;
 
 private:
+    void CleanUpTextures();
+    void SetupTextures();
     void SetupQuad();
 
     const QString m_baseVertShaderFileName = ":/Resources/Shaders/FluidBaseVertexShader.vert";
@@ -35,9 +37,7 @@ private:
     Blitter* m_blitter = nullptr;
 
     // Input textures
-    RenderTargetBuffer* m_velocityTargetBufferA = nullptr;
     Texture* m_velocityOutTextureA = nullptr;
-    RenderTargetBuffer* m_velocityTargetBufferB = nullptr;
     Texture* m_velocityOutTextureB = nullptr;
     DoubleRenderTargetBuffer* m_velocityDoubleTargetBuffer = nullptr;
     Texture* m_uVelocityInputTexture = nullptr;
