@@ -16,6 +16,7 @@ public:
     void CleanUp();
 
     unsigned int GetTargetFBO() const { return m_targetFBO; }
+    Texture* GetTargetTexture() const { return m_targetTexture; }
     bool GetDepthTestEnabled() const { return m_depthTestEnabled; }
     void SetDepthTestEnabled(bool _enable) { m_depthTestEnabled = _enable; }
     QColor GetClearColor() const { return m_clearColor; }
