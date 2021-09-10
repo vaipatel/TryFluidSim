@@ -14,5 +14,6 @@
         <file>Resources/Shaders/RotTexturedTri.vert</file>
         <file>Resources/Shaders/FluidBaseVertexShader.vert</file>
         <file>Resources/Shaders/FluidAdvect.frag</file>
+        <file>Resources/Shaders/FluidSplatForce.frag</file>
     </qresource>
 </RCC>

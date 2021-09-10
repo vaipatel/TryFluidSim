@@ -22,6 +22,7 @@ FluidSimWindow::~FluidSimWindow()
     delete m_velocityOutTextureB;
     delete m_velocityDoubleTargetBuffer;
     delete m_advectProgram;
+    delete m_splatForceProgram;
 }
 
 void FluidSimWindow::initialize()
@@ -32,6 +33,7 @@ void FluidSimWindow::initialize()
     m_uSourceInputTexture = new Texture(m_moscowImgFileName, TextureData::FilterParam::LINEAR, 1);
 
     m_advectProgram = new ShaderProgram(m_baseVertShaderFileName, m_advectFragShaderFileName);
+    m_splatForceProgram = new ShaderProgram(m_baseVertShaderFileName, m_splatForceFragShaderFileName);
 //    m_triangleProgram = new ShaderProgram(m_rotTexturedTriVertShaderFileName, m_rotTexturedTriFragShaderFileName);
 
     SetupTextures();

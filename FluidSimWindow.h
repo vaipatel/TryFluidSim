@@ -31,6 +31,7 @@ private:
 
     const QString m_baseVertShaderFileName = ":/Resources/Shaders/FluidBaseVertexShader.vert";
     const QString m_advectFragShaderFileName = ":/Resources/Shaders/FluidAdvect.frag";
+    const QString m_splatForceFragShaderFileName = ":/Resources/Shaders/FluidSplatForce.frag";
     const QString m_perlinNoiseImgFileName = ":/Resources/Images/perlin_noise_texture-500x500.png";
     const QString m_moscowImgFileName = ":/Resources/Images/Moscow_traffic_congestion.JPG";
 
@@ -46,6 +47,7 @@ private:
 
 
     ShaderProgram* m_advectProgram = nullptr;
+    ShaderProgram* m_splatForceProgram = nullptr;
 
     TrisObject* m_quad = nullptr;
 
