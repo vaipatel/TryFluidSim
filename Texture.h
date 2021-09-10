@@ -48,7 +48,7 @@ public:
     void CleanUp();
 
     size_t GetNumTextures() const { return m_numTextures; }
-    unsigned int GetHandle(size_t _textureIdx) const { Q_ASSERT(_textureIdx < m_numTextures); return m_handles[_textureIdx]; }
+    unsigned int GetHandle(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_handles[_textureIdx]; }
     unsigned int GetUnitId(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_unitId; }
     int GetWidth(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_width; }
     int GetHeight(size_t _textureIdx = 0) const { Q_ASSERT(_textureIdx < m_numTextures); return m_storedTextureData[_textureIdx].m_height; }

@@ -27,6 +27,7 @@ private:
     void CleanUpTextures();
     void SetupTextures();
     void SetupQuad();
+    void Advect(DoubleRenderTargetBuffer* _doubleBuffer, Texture *_velTex, float _dt);
 
     const QString m_baseVertShaderFileName = ":/Resources/Shaders/FluidBaseVertexShader.vert";
     const QString m_advectFragShaderFileName = ":/Resources/Shaders/FluidAdvect.frag";

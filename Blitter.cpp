@@ -17,6 +17,12 @@ Blitter::~Blitter()
     CleanUp();
 }
 
+void Blitter::BlitToTarget(RenderTargetBuffer* _renderTarget)
+{
+    BindTarget(_renderTarget);
+    DrawScreenQuad();
+}
+
 void Blitter::BindTarget(RenderTargetBuffer *_renderTarget)
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
@@ -55,6 +61,11 @@ void Blitter::BlitToScreen(const Texture* _textureToBlit, size_t _texIdx)
     // Blit texture to screen
     BindTarget(nullptr);
     DrawTextureOnScreenQuad(_textureToBlit, _texIdx);
+}
+
+void Blitter::DrawScreenQuad()
+{
+    m_quad->Draw();
 }
 
 void Blitter::CleanUp()

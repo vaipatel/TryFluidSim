@@ -6,6 +6,7 @@
 #include "Shared.h"
 #include "Texture.h"
 #include "TrisObject.h"
+#include <QDebug>
 #include <QScreen>
 #include <QVector2D>
 
@@ -38,25 +39,27 @@ void FluidSimWindow::initialize()
 }
 
 void FluidSimWindow::render()
-{
-    m_blitter->BindTarget(m_velocityDoubleTargetBuffer->GetFirst());
+{   
+    float dtS = static_cast<float>(1/(screen()->refreshRate()));
 
-    m_advectProgram->Bind();
-    m_uSourceInputTexture->Bind();
-    m_advectProgram->SetUniform("uSource", static_cast<int>(m_uSourceInputTexture->GetUnitId()));
-    m_uVelocityInputTexture->Bind();
-    m_advectProgram->SetUniform("uVelocity", static_cast<int>(m_uVelocityInputTexture->GetUnitId()));
+    // Advect velocity
+    {
+        Texture* velTex = nullptr;
+        // TODO: Rem temporary seeding of velocity with perlin noise
+        static bool doneOnce = false;
+        if ( !doneOnce )
+        {
+            velTex = m_uVelocityInputTexture;
+            doneOnce = true;
+        }
+        else
+        {
+            velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
+        }
+        Advect(m_velocityDoubleTargetBuffer, velTex, dtS);
+    }
 
-    float timeS = static_cast<float>(1/(screen()->refreshRate()));
-    m_advectProgram->SetUniform("dt", timeS);
-
-    m_advectProgram->SetUniform("dissipation", 1.0f);
-
-    m_advectProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
-
-    m_quad->Draw();
-
-    m_advectProgram->Release();
+    // Add forces
 
     m_blitter->BindTarget(nullptr);
     m_blitter->DrawTextureOnScreenQuad(m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture());
@@ -116,4 +119,37 @@ void FluidSimWindow::SetupQuad()
         }
     };
     m_quad = new TrisObject(quadVertices);
+}
+
+void FluidSimWindow::Advect(DoubleRenderTargetBuffer* _doubleBuffer, Texture* _velTex, float _dt)
+{
+    // Bind advect shader program
+    m_advectProgram->Bind();
+
+    // Pass buffer texture to read from
+    Texture* textureToBeAdvected = _doubleBuffer->GetFirst()->GetTargetTexture();
+    textureToBeAdvected->Bind();
+    m_advectProgram->SetUniform("uSource", static_cast<int>(textureToBeAdvected->GetUnitId()));
+
+    // Pass velocity buffer
+    _velTex->Bind();
+    m_advectProgram->SetUniform("uVelocity", static_cast<int>(_velTex->GetUnitId()));
+
+    // Pass time
+    m_advectProgram->SetUniform("dt", _dt);
+
+    // Pass dissipation
+    m_advectProgram->SetUniform("dissipation", 0.0f);
+
+    // Pass cell size
+    m_advectProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
+
+    // Blit advected result onto second buffer
+    m_blitter->BlitToTarget(_doubleBuffer->GetSecond());
+
+    // Release advect shader program
+    m_advectProgram->Release();
+
+    // Swap double buffers. Next time advected result will be read from.
+    _doubleBuffer->SwapBuffers();
 }
