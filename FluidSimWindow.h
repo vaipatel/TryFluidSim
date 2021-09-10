@@ -28,6 +28,7 @@ private:
     void SetupTextures();
     void SetupQuad();
     void Advect(DoubleRenderTargetBuffer* _doubleBuffer, Texture *_velTex, float _dt);
+    void Splat(float _x, float _y, float _dx, float _dy, const QVector3D& _color);
 
     const QString m_baseVertShaderFileName = ":/Resources/Shaders/FluidBaseVertexShader.vert";
     const QString m_advectFragShaderFileName = ":/Resources/Shaders/FluidAdvect.frag";
@@ -47,7 +48,6 @@ private:
     Texture* m_dyeTextureA = nullptr;
     Texture* m_dyeTextureB = nullptr;
     DoubleRenderTargetBuffer* m_dyeDoubleTargetBuffer = nullptr;
-
 
     ShaderProgram* m_advectProgram = nullptr;
     ShaderProgram* m_splatForceProgram = nullptr;

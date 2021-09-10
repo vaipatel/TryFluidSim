@@ -9,6 +9,7 @@
 #include <QDebug>
 #include <QScreen>
 #include <QVector2D>
+#include <QVector3D>
 
 FluidSimWindow::FluidSimWindow(QWindow* _parent) : OpenGLWindow(_parent)
 {
@@ -163,4 +164,44 @@ void FluidSimWindow::Advect(DoubleRenderTargetBuffer* _doubleBuffer, Texture* _v
 
     // Swap double buffers. Next time advected result will be read from.
     _doubleBuffer->SwapBuffers();
+}
+
+void FluidSimWindow::Splat(float _x, float _y, float _dx, float _dy, const QVector3D& _color)
+{
+    // Bind the splat force shader
+    m_splatForceProgram->Bind();
+
+    // Pass first velocity buffer's texture
+    Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
+    velTex->Bind();
+    m_splatForceProgram->SetUniform("uSource", static_cast<int>(velTex->GetUnitId()));
+
+    // Pass other params
+    m_splatForceProgram->SetUniform("aspectRatio", m_viewAspect);
+    m_splatForceProgram->SetUniform("color", QVector3D(_dx, _dy, 0.0f));
+    m_splatForceProgram->SetUniform("point", QVector2D(_x, _y));
+    m_splatForceProgram->SetUniform("radius", 0.25f / 10.0f);
+
+    // Blit result onto second velocity buffer
+    m_blitter->BlitToTarget(m_velocityDoubleTargetBuffer->GetSecond());
+
+    // Swap velocity buffers
+    m_velocityDoubleTargetBuffer->SwapBuffers();
+
+    // Pass first dye buffer's texture
+    Texture* dyeTex = m_dyeDoubleTargetBuffer->GetFirst()->GetTargetTexture();
+    dyeTex->Bind();
+    m_splatForceProgram->SetUniform("uSource", static_cast<int>(dyeTex->GetUnitId()));
+
+    // Pass the color
+    m_splatForceProgram->SetUniform("color", _color);
+
+    // Blit result to second dye buffer
+    m_blitter->BlitToTarget(m_dyeDoubleTargetBuffer->GetSecond());
+
+    // Release the splat force shader
+    m_splatForceProgram->Release();
+
+    // Swap dye buffers
+    m_dyeDoubleTargetBuffer->SwapBuffers();
 }

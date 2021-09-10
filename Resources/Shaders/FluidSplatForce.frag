@@ -6,7 +6,7 @@ uniform highp float aspectRatio;
 uniform highp vec3 color;
 uniform highp vec2 point;
 uniform highp float radius;
-out vec4 FragColor;
+out highp vec4 FragColor;
 
 void main(void)
 {
