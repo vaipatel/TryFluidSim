@@ -44,6 +44,9 @@ private:
     DoubleRenderTargetBuffer* m_velocityDoubleTargetBuffer = nullptr;
     Texture* m_uVelocityInputTexture = nullptr;
     Texture* m_uSourceInputTexture = nullptr;
+    Texture* m_dyeTextureA = nullptr;
+    Texture* m_dyeTextureB = nullptr;
+    DoubleRenderTargetBuffer* m_dyeDoubleTargetBuffer = nullptr;
 
 
     ShaderProgram* m_advectProgram = nullptr;

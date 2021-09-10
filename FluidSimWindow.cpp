@@ -21,6 +21,9 @@ FluidSimWindow::~FluidSimWindow()
     delete m_velocityOutTextureA;
     delete m_velocityOutTextureB;
     delete m_velocityDoubleTargetBuffer;
+    delete m_dyeTextureA;
+    delete m_dyeTextureB;
+    delete m_dyeDoubleTargetBuffer;
     delete m_advectProgram;
     delete m_splatForceProgram;
 }
@@ -89,6 +92,9 @@ void FluidSimWindow::CleanUpTextures()
     SafeDelete(m_velocityDoubleTargetBuffer);
     SafeDelete(m_velocityOutTextureA);
     SafeDelete(m_velocityOutTextureB);
+    SafeDelete(m_dyeDoubleTargetBuffer);
+    SafeDelete(m_dyeTextureA);
+    SafeDelete(m_dyeTextureB);
 }
 
 void FluidSimWindow::SetupTextures()
@@ -103,6 +109,9 @@ void FluidSimWindow::SetupTextures()
         velocityBuffer->SetClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
         velocityBuffer->SetClearColor({38, 38, 38, 255});
     }
+    m_dyeTextureA = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr);
+    m_dyeTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr);
+    m_dyeDoubleTargetBuffer = new DoubleRenderTargetBuffer(m_dyeTextureA, m_dyeTextureB);
 }
 
 void FluidSimWindow::SetupQuad()
