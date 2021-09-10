@@ -107,8 +107,8 @@ void FluidSimWindow::mouseMoveEvent(QMouseEvent* _ev)
 {
     if ( _ev->buttons() & Qt::LeftButton )
     {
-        float x = static_cast<float>(_ev->x()) / static_cast<float>(m_viewWidth);
-        float y = 1.0f - static_cast<float>(_ev->y()) / static_cast<float>(m_viewHeight);
+        float x = static_cast<float>(_ev->x()) / static_cast<float>(width());
+        float y = 1.0f - static_cast<float>(_ev->y()) / static_cast<float>(height());
         m_mousePosList.push_back({x, y});
     }
 }

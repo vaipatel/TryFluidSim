@@ -36,9 +36,9 @@ protected:
     QPair<int, int> CalcViewPortWidthHeight() const;
     void UpdateViewPortIfNeeded();
 
-    int m_viewWidth = 0;
-    int m_viewHeight = 0;
-    float m_viewAspect = 0;
+    int m_viewWidth = 0;    //!< View width. Equals window width times device pixel ratio.
+    int m_viewHeight = 0;   //!< View height. Equals window height times device pixel ratio.
+    float m_viewAspect = 0; //!< Ratio of width to height
 
 private:
     bool m_animating;
