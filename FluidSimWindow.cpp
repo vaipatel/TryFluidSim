@@ -113,6 +113,13 @@ void FluidSimWindow::SetupTextures()
     m_dyeTextureA = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr);
     m_dyeTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr);
     m_dyeDoubleTargetBuffer = new DoubleRenderTargetBuffer(m_dyeTextureA, m_dyeTextureB);
+    std::vector<RenderTargetBuffer*> dyeBuffers = m_dyeDoubleTargetBuffer->GetBoth();
+    foreach (RenderTargetBuffer* dyeBuffer, dyeBuffers)
+    {
+        dyeBuffer->SetDepthTestEnabled(false);
+        dyeBuffer->SetClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+        dyeBuffer->SetClearColor({38, 38, 38, 255});
+    }
 }
 
 void FluidSimWindow::SetupQuad()
