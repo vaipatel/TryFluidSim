@@ -2,6 +2,7 @@
 #include <QMatrix4x4>
 #include <QOpenGLShaderProgram>
 #include <QVector2D>
+#include <QVector3D>
 
 const QMap<ShaderProgram::enVSAttrIdx, ShaderProgram::VSAttrData> ShaderProgram::s_VS_ATTR_NAMES =
 {
@@ -83,6 +84,12 @@ void ShaderProgram::SetUniform(const QString &_name, const QVector2D &_value)
     SetUniform(loc, _value);
 }
 
+void ShaderProgram::SetUniform(const QString& _name, const QVector3D& _value)
+{
+    unsigned int loc = GetUniformLocation(_name);
+    SetUniform(loc, _value);
+}
+
 void ShaderProgram::SetUniform(unsigned int _loc, const QMatrix4x4 &_value)
 {
     m_program->setUniformValue(static_cast<int>(_loc), _value);
@@ -100,7 +107,12 @@ void ShaderProgram::SetUniform(unsigned int _loc, float _value)
 
 void ShaderProgram::SetUniform(unsigned int _loc, const QVector2D &_value)
 {
-    m_program->setUniformValue(_loc, _value);
+    m_program->setUniformValue(static_cast<int>(_loc), _value);
+}
+
+void ShaderProgram::SetUniform(unsigned int _loc, const QVector3D& _value)
+{
+    m_program->setUniformValue(static_cast<int>(_loc), _value);
 }
 
 void ShaderProgram::Bind()
