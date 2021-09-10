@@ -62,6 +62,12 @@ private:
 
     float m_texelSizeX = 0.0f;
     float m_texelSizeY = 0.0f;
+    const int SIM_RES = 128;
+    const float SPLAT_FORCE = 100;
+    const float m_fakeInputX = 0.5f;
+    const float m_fakeInputY = 0.5f;
+    const float m_fakeDX = 1.0f;
+    const float m_fakeDY = 0.0f;
 };
 
 #endif // FLUIDSIMWINDOW_H

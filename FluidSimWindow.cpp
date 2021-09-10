@@ -45,30 +45,32 @@ void FluidSimWindow::initialize()
 }
 
 void FluidSimWindow::render()
-{   
+{
     float dtS = static_cast<float>(1/(screen()->refreshRate()));
 
-    // Advect velocity
+    // Add forces
     {
-        Texture* velTex = nullptr;
-        // TODO: Rem temporary seeding of velocity with perlin noise
         static bool doneOnce = false;
         if ( !doneOnce )
         {
-            velTex = m_uVelocityInputTexture;
+            Splat(m_fakeInputX, m_fakeInputY, SPLAT_FORCE * m_fakeDX, SPLAT_FORCE * m_fakeDY, {1.0f, 0.0, 1.0});
             doneOnce = true;
         }
-        else
-        {
-            velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
-        }
+    }
+
+    // Advect velocity
+    {
+        Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
         Advect(m_velocityDoubleTargetBuffer, velTex, dtS);
     }
 
-    // Add forces
+    {
+        Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
+        Advect(m_dyeDoubleTargetBuffer, velTex, dtS);
+    }
 
     m_blitter->BindTarget(nullptr);
-    m_blitter->DrawTextureOnScreenQuad(m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture());
+    m_blitter->DrawTextureOnScreenQuad(m_dyeDoubleTargetBuffer->GetFirst()->GetTargetTexture());
 }
 
 void FluidSimWindow::cleanup()
@@ -158,7 +160,7 @@ void FluidSimWindow::Advect(DoubleRenderTargetBuffer* _doubleBuffer, Texture* _v
     m_advectProgram->SetUniform("dt", _dt);
 
     // Pass dissipation
-    m_advectProgram->SetUniform("dissipation", 0.0f);
+    m_advectProgram->SetUniform("dissipation", 0.5f);
 
     // Pass cell size
     m_advectProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
