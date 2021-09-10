@@ -63,8 +63,12 @@ void FluidSimWindow::render()
 
     // Add forces
     {
-        while ( !m_mousePosList.empty() )
+        static int maxPosToProcess = 10;
+        int processedPos = 0;
+        while ( !m_mousePosList.empty() && processedPos < maxPosToProcess )
         {
+            processedPos++;
+
             QVector2D mousePos = m_mousePosList.front();
             m_mousePosList.pop_front();
 
