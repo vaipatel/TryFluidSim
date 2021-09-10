@@ -102,8 +102,8 @@ void FluidSimWindow::CleanUpTextures()
 
 void FluidSimWindow::SetupTextures()
 {
-    m_velocityOutTextureA = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr);
-    m_velocityOutTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr);
+    m_velocityOutTextureA = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 0);
+    m_velocityOutTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 1);
     m_velocityDoubleTargetBuffer = new DoubleRenderTargetBuffer(m_velocityOutTextureA, m_velocityOutTextureB);
     std::vector<RenderTargetBuffer*> velocityBuffers = m_velocityDoubleTargetBuffer->GetBoth();
     foreach (RenderTargetBuffer* velocityBuffer, velocityBuffers)
@@ -112,8 +112,9 @@ void FluidSimWindow::SetupTextures()
         velocityBuffer->SetClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
         velocityBuffer->SetClearColor({38, 38, 38, 255});
     }
-    m_dyeTextureA = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr);
-    m_dyeTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr);
+
+    m_dyeTextureA = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 0);
+    m_dyeTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 1);
     m_dyeDoubleTargetBuffer = new DoubleRenderTargetBuffer(m_dyeTextureA, m_dyeTextureB);
     std::vector<RenderTargetBuffer*> dyeBuffers = m_dyeDoubleTargetBuffer->GetBoth();
     foreach (RenderTargetBuffer* dyeBuffer, dyeBuffers)
