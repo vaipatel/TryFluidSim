@@ -13,6 +13,6 @@ void main(void)
     vec2 p = vUv - point.xy;
     p.x *= aspectRatio;
     vec3 splat = exp(-dot(p, p) / radius) * color;
-    vec3 base = texture2D(uSource, vUv).xyz;
+    vec3 base = texture(uSource, vUv).xyz;
     FragColor = vec4(base + splat, 1.0);
 }
