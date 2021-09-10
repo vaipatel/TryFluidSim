@@ -190,7 +190,7 @@ void FluidSimWindow::Splat(float _x, float _y, float _dx, float _dy, const QVect
     m_splatForceProgram->SetUniform("aspectRatio", m_viewAspect);
     m_splatForceProgram->SetUniform("color", QVector3D(_dx, _dy, 0.0f));
     m_splatForceProgram->SetUniform("point", QVector2D(_x, _y));
-    m_splatForceProgram->SetUniform("radius", 0.25f / 10.0f);
+    m_splatForceProgram->SetUniform("radius", 0.25f / 100.0f);
 
     // Blit result onto second velocity buffer
     m_blitter->BlitToTarget(m_velocityDoubleTargetBuffer->GetSecond());
