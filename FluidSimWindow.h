@@ -2,6 +2,8 @@
 #define FLUIDSIMWINDOW_H
 
 #include "OpenGLWindow.h"
+#include <QVector2D>
+#include <list>
 
 class Blitter;
 class DoubleRenderTargetBuffer;
@@ -9,6 +11,7 @@ class RenderTargetBuffer;
 class ShaderProgram;
 class Texture;
 class TrisObject;
+class QMouseEvent;
 class QWindow;
 
 class FluidSimWindow : public OpenGLWindow
@@ -22,6 +25,7 @@ protected:
     void render() override;
     void cleanup() override;
     void HandleViewPortUpdated() override;
+    void mouseMoveEvent(QMouseEvent* _ev) override;
 
 private:
     void CleanUpTextures();
@@ -64,10 +68,7 @@ private:
     float m_texelSizeY = 0.0f;
     const int SIM_RES = 128;
     const float SPLAT_FORCE = 100;
-    const float m_fakeInputX = 0.5f;
-    const float m_fakeInputY = 0.5f;
-    const float m_fakeDX = 1.0f;
-    const float m_fakeDY = 0.0f;
+    std::list<QVector2D> m_mousePosList;
 };
 
 #endif // FLUIDSIMWINDOW_H

@@ -7,6 +7,7 @@
 #include "Texture.h"
 #include "TrisObject.h"
 #include <QDebug>
+#include <QMouseEvent>
 #include <QScreen>
 #include <QVector2D>
 #include <QVector3D>
@@ -48,25 +49,33 @@ void FluidSimWindow::render()
 {
     float dtS = static_cast<float>(1/(screen()->refreshRate()));
 
-    // Add forces
-    {
-        static bool doneOnce = false;
-        if ( !doneOnce )
-        {
-            Splat(m_fakeInputX, m_fakeInputY, SPLAT_FORCE * m_fakeDX, SPLAT_FORCE * m_fakeDY, {1.0f, 0.0, 1.0});
-            doneOnce = true;
-        }
-    }
-
     // Advect velocity
     {
         Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
         Advect(m_velocityDoubleTargetBuffer, velTex, dtS);
     }
 
+    // Advect dye
     {
         Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
         Advect(m_dyeDoubleTargetBuffer, velTex, dtS);
+    }
+
+    // Add forces
+    {
+        while ( !m_mousePosList.empty() )
+        {
+            QVector2D mousePos = m_mousePosList.front();
+            m_mousePosList.pop_front();
+
+            QVector2D delta;
+            if ( !m_mousePosList.empty() )
+            {
+                delta = m_mousePosList.front() - mousePos;
+            }
+
+            Splat(mousePos.x(), mousePos.y(), SPLAT_FORCE * delta.x(), SPLAT_FORCE * delta.y(), {1.0f, 0.0, 1.0});
+        }
     }
 
     m_blitter->BindTarget(nullptr);
@@ -88,6 +97,16 @@ void FluidSimWindow::HandleViewPortUpdated()
 
     CleanUpTextures();
     SetupTextures();
+}
+
+void FluidSimWindow::mouseMoveEvent(QMouseEvent* _ev)
+{
+    if ( _ev->buttons() & Qt::LeftButton )
+    {
+        float x = static_cast<float>(_ev->x()) / static_cast<float>(m_viewWidth);
+        float y = 1.0f - static_cast<float>(_ev->y()) / static_cast<float>(m_viewHeight);
+        m_mousePosList.push_back({x, y});
+    }
 }
 
 void FluidSimWindow::CleanUpTextures()
