@@ -28,9 +28,13 @@ FluidSimWindow::~FluidSimWindow()
     delete m_dyeDoubleTargetBuffer;
     delete m_divergenceTexture;
     delete m_divergenceTargetBuffer;
+    delete m_pressureTextureA;
+    delete m_pressureTextureB;
+    delete m_pressureDoubleTargetBuffer;
     delete m_advectProgram;
     delete m_splatForceProgram;
     delete m_divergenceProgram;
+    delete m_pressureSolveProgram;
 }
 
 void FluidSimWindow::initialize()
@@ -43,10 +47,9 @@ void FluidSimWindow::initialize()
     m_advectProgram = new ShaderProgram(m_baseVertShaderFileName, m_advectFragShaderFileName);
     m_splatForceProgram = new ShaderProgram(m_baseVertShaderFileName, m_splatForceFragShaderFileName);
     m_divergenceProgram = new ShaderProgram(m_baseVertShaderFileName, m_divergenceFragShaderFileName);
-//    m_triangleProgram = new ShaderProgram(m_rotTexturedTriVertShaderFileName, m_rotTexturedTriFragShaderFileName);
+    m_pressureSolveProgram = new ShaderProgram(m_baseVertShaderFileName, m_pressureSolveFragShaderFileName);
 
     SetupTextures();
-    SetupQuad();
 }
 
 void FluidSimWindow::render()
@@ -87,6 +90,8 @@ void FluidSimWindow::render()
     }
 
     ComputeDivergence();
+
+    SolvePressure();
 
     m_blitter->BindTarget(nullptr);
     m_blitter->DrawTextureOnScreenQuad(m_dyeDoubleTargetBuffer->GetFirst()->GetTargetTexture());
@@ -129,6 +134,9 @@ void FluidSimWindow::CleanUpTextures()
     SafeDelete(m_dyeTextureB);
     SafeDelete(m_divergenceTargetBuffer);
     SafeDelete(m_divergenceTexture);
+    SafeDelete(m_pressureDoubleTargetBuffer);
+    SafeDelete(m_pressureTextureA);
+    SafeDelete(m_pressureTextureB);
 }
 
 void FluidSimWindow::SetupTextures()
@@ -154,24 +162,15 @@ void FluidSimWindow::SetupTextures()
     m_divergenceTexture = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 0);
     m_divergenceTargetBuffer = new RenderTargetBuffer(m_divergenceTexture);
     ConfigureRenderTarget(m_divergenceTargetBuffer);
-}
 
-void FluidSimWindow::SetupQuad()
-{
-    std::vector<Tri> quadVertices = {
-             // positions          // colors                 // texCoords
-        {
-            {{-1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
-            {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-            {{ 1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
-        },
-        {
-            {{-1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
-            {{ 1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
-        }
-    };
-    m_quad = new TrisObject(quadVertices);
+    m_pressureTextureA = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 0);
+    m_pressureTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 1);
+    m_pressureDoubleTargetBuffer =  new DoubleRenderTargetBuffer(m_pressureTextureA, m_pressureTextureB);
+    std::vector<RenderTargetBuffer*> pressureBuffers = m_pressureDoubleTargetBuffer->GetBoth();
+    foreach(RenderTargetBuffer* pressureBuffer, pressureBuffers)
+    {
+        ConfigureRenderTarget(pressureBuffer);
+    }
 }
 
 void FluidSimWindow::Advect(DoubleRenderTargetBuffer* _doubleBuffer, Texture* _velTex, float _dt)
@@ -222,6 +221,7 @@ void FluidSimWindow::Splat(float _x, float _y, float _dx, float _dy, const QVect
     m_splatForceProgram->SetUniform("color", QVector3D(_dx, _dy, 0.0f));
     m_splatForceProgram->SetUniform("point", QVector2D(_x, _y));
     m_splatForceProgram->SetUniform("radius", 0.25f / 100.0f);
+    m_splatForceProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
 
     // Blit result onto second velocity buffer
     m_blitter->BlitToTarget(m_velocityDoubleTargetBuffer->GetSecond());
@@ -256,9 +256,39 @@ void FluidSimWindow::ComputeDivergence()
     velTex->Bind();
     m_divergenceProgram->SetUniform("uVelocity", static_cast<int>(velTex->GetUnitId()));
 
+    // Pass cell size
+    m_divergenceProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
+
     m_blitter->BlitToTarget(m_divergenceTargetBuffer);
 
     m_divergenceProgram->Release();
+}
+
+void FluidSimWindow::SolvePressure()
+{
+    m_pressureSolveProgram->Bind();
+
+    // Pass divergence texture
+    Texture* divTex = m_divergenceTargetBuffer->GetTargetTexture();
+    divTex->Bind();
+    m_pressureSolveProgram->SetUniform("uDivergence", static_cast<int>(divTex->GetUnitId()));
+
+    // Pass cell size
+    m_pressureSolveProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
+
+    for (size_t i = 0; i < 2; i++)
+    {
+        // Pass curr pressure texture
+        Texture* pressureTex = m_pressureDoubleTargetBuffer->GetFirst()->GetTargetTexture();
+        pressureTex->Bind();
+        m_pressureSolveProgram->SetUniform("uPressure", static_cast<int>(pressureTex->GetUnitId()));
+
+        m_blitter->BlitToTarget(m_pressureDoubleTargetBuffer->GetSecond());
+
+        m_pressureDoubleTargetBuffer->SwapBuffers();
+    }
+
+    m_pressureSolveProgram->Release();
 }
 
 void FluidSimWindow::ConfigureRenderTarget(RenderTargetBuffer* _renderTarget)

@@ -16,5 +16,6 @@
         <file>Resources/Shaders/FluidAdvect.frag</file>
         <file>Resources/Shaders/FluidSplatForce.frag</file>
         <file>Resources/Shaders/FluidDivergence.frag</file>
+        <file>Resources/Shaders/FluidPressureSolve.frag</file>
     </qresource>
 </RCC>

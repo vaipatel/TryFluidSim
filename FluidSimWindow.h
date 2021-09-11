@@ -30,16 +30,17 @@ protected:
 private:
     void CleanUpTextures();
     void SetupTextures();
-    void SetupQuad();
     void Advect(DoubleRenderTargetBuffer* _doubleBuffer, Texture *_velTex, float _dt);
     void Splat(float _x, float _y, float _dx, float _dy, const QVector3D& _color);
     void ComputeDivergence();
+    void SolvePressure();
     void ConfigureRenderTarget(RenderTargetBuffer* _renderTarget);
 
     const QString m_baseVertShaderFileName = ":/Resources/Shaders/FluidBaseVertexShader.vert";
     const QString m_advectFragShaderFileName = ":/Resources/Shaders/FluidAdvect.frag";
     const QString m_splatForceFragShaderFileName = ":/Resources/Shaders/FluidSplatForce.frag";
     const QString m_divergenceFragShaderFileName = ":/Resources/Shaders/FluidDivergence.frag";
+    const QString m_pressureSolveFragShaderFileName = ":/Resources/Shaders/FluidPressureSolve.frag";
     const QString m_perlinNoiseImgFileName = ":/Resources/Images/perlin_noise_texture-500x500.png";
     const QString m_moscowImgFileName = ":/Resources/Images/Moscow_traffic_congestion.JPG";
 
@@ -57,18 +58,14 @@ private:
     DoubleRenderTargetBuffer* m_dyeDoubleTargetBuffer = nullptr;
     Texture* m_divergenceTexture = nullptr;
     RenderTargetBuffer* m_divergenceTargetBuffer = nullptr;
+    Texture* m_pressureTextureA = nullptr;
+    Texture* m_pressureTextureB = nullptr;
+    DoubleRenderTargetBuffer* m_pressureDoubleTargetBuffer = nullptr;
 
     ShaderProgram* m_advectProgram = nullptr;
     ShaderProgram* m_splatForceProgram = nullptr;
     ShaderProgram* m_divergenceProgram = nullptr;
-
-    TrisObject* m_quad = nullptr;
-
-//    // Triangle stage
-//    RenderTargetBuffer* m_triTargetBuffer = nullptr;
-//    Texture* m_triOutTexture = nullptr;
-//    ShaderProgram* m_triangleProgram; //!< Need one of these for each step of fluid sim
-//    TrisObject* m_tri = nullptr;
+    ShaderProgram* m_pressureSolveProgram = nullptr;
 
     float m_texelSizeX = 0.0f;
     float m_texelSizeY = 0.0f;
