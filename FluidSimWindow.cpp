@@ -26,8 +26,11 @@ FluidSimWindow::~FluidSimWindow()
     delete m_dyeTextureA;
     delete m_dyeTextureB;
     delete m_dyeDoubleTargetBuffer;
+    delete m_divergenceTexture;
+    delete m_divergenceTargetBuffer;
     delete m_advectProgram;
     delete m_splatForceProgram;
+    delete m_divergenceProgram;
 }
 
 void FluidSimWindow::initialize()
@@ -39,6 +42,7 @@ void FluidSimWindow::initialize()
 
     m_advectProgram = new ShaderProgram(m_baseVertShaderFileName, m_advectFragShaderFileName);
     m_splatForceProgram = new ShaderProgram(m_baseVertShaderFileName, m_splatForceFragShaderFileName);
+    m_divergenceProgram = new ShaderProgram(m_baseVertShaderFileName, m_divergenceFragShaderFileName);
 //    m_triangleProgram = new ShaderProgram(m_rotTexturedTriVertShaderFileName, m_rotTexturedTriFragShaderFileName);
 
     SetupTextures();
@@ -82,6 +86,8 @@ void FluidSimWindow::render()
         }
     }
 
+    ComputeDivergence();
+
     m_blitter->BindTarget(nullptr);
     m_blitter->DrawTextureOnScreenQuad(m_dyeDoubleTargetBuffer->GetFirst()->GetTargetTexture());
 }
@@ -121,6 +127,8 @@ void FluidSimWindow::CleanUpTextures()
     SafeDelete(m_dyeDoubleTargetBuffer);
     SafeDelete(m_dyeTextureA);
     SafeDelete(m_dyeTextureB);
+    SafeDelete(m_divergenceTargetBuffer);
+    SafeDelete(m_divergenceTexture);
 }
 
 void FluidSimWindow::SetupTextures()
@@ -131,9 +139,7 @@ void FluidSimWindow::SetupTextures()
     std::vector<RenderTargetBuffer*> velocityBuffers = m_velocityDoubleTargetBuffer->GetBoth();
     foreach (RenderTargetBuffer* velocityBuffer, velocityBuffers)
     {
-        velocityBuffer->SetDepthTestEnabled(false);
-        velocityBuffer->SetClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
-        velocityBuffer->SetClearColor({38, 38, 38, 255});
+        ConfigureRenderTarget(velocityBuffer);
     }
 
     m_dyeTextureA = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 0);
@@ -142,10 +148,12 @@ void FluidSimWindow::SetupTextures()
     std::vector<RenderTargetBuffer*> dyeBuffers = m_dyeDoubleTargetBuffer->GetBoth();
     foreach (RenderTargetBuffer* dyeBuffer, dyeBuffers)
     {
-        dyeBuffer->SetDepthTestEnabled(false);
-        dyeBuffer->SetClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
-        dyeBuffer->SetClearColor({38, 38, 38, 255});
+        ConfigureRenderTarget(dyeBuffer);
     }
+
+    m_divergenceTexture = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 0);
+    m_divergenceTargetBuffer = new RenderTargetBuffer(m_divergenceTexture);
+    ConfigureRenderTarget(m_divergenceTargetBuffer);
 }
 
 void FluidSimWindow::SetupQuad()
@@ -237,4 +245,25 @@ void FluidSimWindow::Splat(float _x, float _y, float _dx, float _dy, const QVect
 
     // Swap dye buffers
     m_dyeDoubleTargetBuffer->SwapBuffers();
+}
+
+void FluidSimWindow::ComputeDivergence()
+{
+    m_divergenceProgram->Bind();
+
+    // Pass first velocity buffer's texture
+    Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
+    velTex->Bind();
+    m_divergenceProgram->SetUniform("uVelocity", static_cast<int>(velTex->GetUnitId()));
+
+    m_blitter->BlitToTarget(m_divergenceTargetBuffer);
+
+    m_divergenceProgram->Release();
+}
+
+void FluidSimWindow::ConfigureRenderTarget(RenderTargetBuffer* _renderTarget)
+{
+    _renderTarget->SetDepthTestEnabled(false);
+    _renderTarget->SetClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+    _renderTarget->SetClearColor({38, 38, 38, 255});
 }

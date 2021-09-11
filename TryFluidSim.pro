@@ -49,6 +49,7 @@ DISTFILES += \
     Resources/Images/red_pepper_strip_2.png \
     Resources/Shaders/FluidAdvect.frag \
     Resources/Shaders/FluidBaseVertexShader.vert \
+    Resources/Shaders/FluidDivergence.frag \
     Resources/Shaders/FluidSplatForce.frag \
     Resources/Shaders/Perlin.frag \
     Resources/Shaders/Perlin.vert \
