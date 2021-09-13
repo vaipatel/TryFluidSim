@@ -50,6 +50,7 @@ DISTFILES += \
     Resources/Shaders/FluidAdvect.frag \
     Resources/Shaders/FluidBaseVertexShader.vert \
     Resources/Shaders/FluidDivergence.frag \
+    Resources/Shaders/FluidGradientSubtract.frag \
     Resources/Shaders/FluidPressureSolve.frag \
     Resources/Shaders/FluidSplatForce.frag \
     Resources/Shaders/Perlin.frag \

@@ -34,6 +34,7 @@ private:
     void Splat(float _x, float _y, float _dx, float _dy, const QVector3D& _color);
     void ComputeDivergence();
     void SolvePressure();
+    void SubtractGradient();
     void ConfigureRenderTarget(RenderTargetBuffer* _renderTarget);
 
     const QString m_baseVertShaderFileName = ":/Resources/Shaders/FluidBaseVertexShader.vert";
@@ -41,6 +42,7 @@ private:
     const QString m_splatForceFragShaderFileName = ":/Resources/Shaders/FluidSplatForce.frag";
     const QString m_divergenceFragShaderFileName = ":/Resources/Shaders/FluidDivergence.frag";
     const QString m_pressureSolveFragShaderFileName = ":/Resources/Shaders/FluidPressureSolve.frag";
+    const QString m_gradientSubtractFragShaderFileName = ":/Resources/Shaders/FluidGradientSubtract.frag";
     const QString m_perlinNoiseImgFileName = ":/Resources/Images/perlin_noise_texture-500x500.png";
     const QString m_moscowImgFileName = ":/Resources/Images/Moscow_traffic_congestion.JPG";
 
@@ -66,6 +68,7 @@ private:
     ShaderProgram* m_splatForceProgram = nullptr;
     ShaderProgram* m_divergenceProgram = nullptr;
     ShaderProgram* m_pressureSolveProgram = nullptr;
+    ShaderProgram* m_gradientSubtractProgram = nullptr;
 
     float m_texelSizeX = 0.0f;
     float m_texelSizeY = 0.0f;

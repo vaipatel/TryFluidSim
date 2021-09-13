@@ -35,6 +35,7 @@ FluidSimWindow::~FluidSimWindow()
     delete m_splatForceProgram;
     delete m_divergenceProgram;
     delete m_pressureSolveProgram;
+    delete m_gradientSubtractProgram;
 }
 
 void FluidSimWindow::initialize()
@@ -48,6 +49,7 @@ void FluidSimWindow::initialize()
     m_splatForceProgram = new ShaderProgram(m_baseVertShaderFileName, m_splatForceFragShaderFileName);
     m_divergenceProgram = new ShaderProgram(m_baseVertShaderFileName, m_divergenceFragShaderFileName);
     m_pressureSolveProgram = new ShaderProgram(m_baseVertShaderFileName, m_pressureSolveFragShaderFileName);
+    m_gradientSubtractProgram = new ShaderProgram(m_baseVertShaderFileName, m_gradientSubtractFragShaderFileName);
 
     SetupTextures();
 }
@@ -55,18 +57,6 @@ void FluidSimWindow::initialize()
 void FluidSimWindow::render()
 {
     float dtS = static_cast<float>(1/(screen()->refreshRate()));
-
-    // Advect velocity
-    {
-        Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
-        Advect(m_velocityDoubleTargetBuffer, velTex, dtS);
-    }
-
-    // Advect dye
-    {
-        Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
-        Advect(m_dyeDoubleTargetBuffer, velTex, dtS);
-    }
 
     // Add forces
     {
@@ -92,6 +82,14 @@ void FluidSimWindow::render()
     ComputeDivergence();
 
     SolvePressure();
+
+    SubtractGradient();
+
+    // Advect velocity
+    Advect(m_velocityDoubleTargetBuffer, dtS);
+
+    // Advect dye
+    Advect(m_dyeDoubleTargetBuffer, dtS);
 
     m_blitter->BindTarget(nullptr);
     m_blitter->DrawTextureOnScreenQuad(m_dyeDoubleTargetBuffer->GetFirst()->GetTargetTexture());
@@ -301,6 +299,32 @@ void FluidSimWindow::SolvePressure()
     }
 
     m_pressureSolveProgram->Release();
+}
+
+void FluidSimWindow::SubtractGradient()
+{
+    m_gradientSubtractProgram->Bind();
+
+    // Pass cell size
+    m_gradientSubtractProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
+
+    // Pass first velocity buffer's texture
+    Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
+    size_t velTexUnitId = 0;
+    velTex->Bind(0, &velTexUnitId);
+    m_gradientSubtractProgram->SetUniform("uVelocity", static_cast<int>(velTexUnitId));
+
+    // Pass first pressure buffer's texture
+    Texture* pressureTex = m_pressureDoubleTargetBuffer->GetFirst()->GetTargetTexture();
+    size_t pressureTexUnitId = 1;
+    pressureTex->Bind(0, &pressureTexUnitId);
+    m_gradientSubtractProgram->SetUniform("uPressure", static_cast<int>(pressureTexUnitId));
+
+    m_blitter->BlitToTarget(m_velocityDoubleTargetBuffer->GetSecond());
+
+    m_velocityDoubleTargetBuffer->SwapBuffers();
+
+    m_gradientSubtractProgram->Release();
 }
 
 void FluidSimWindow::ConfigureRenderTarget(RenderTargetBuffer* _renderTarget)
