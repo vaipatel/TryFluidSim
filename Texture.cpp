@@ -36,10 +36,17 @@ Texture::~Texture()
     }
 }
 
-void Texture::Bind(size_t _textureIdx) const
+void Texture::Bind(size_t _textureIdx, size_t* _unitId) const
 {
     QOpenGLExtraFunctions* extraFuncs = QOpenGLContext::currentContext()->extraFunctions();
-    extraFuncs->glActiveTexture(GL_TEXTURE0 + GetUnitId(_textureIdx));
+    if ( _unitId )
+    {
+        extraFuncs->glActiveTexture(GL_TEXTURE0 + *_unitId);
+    }
+    else
+    {
+        extraFuncs->glActiveTexture(GL_TEXTURE0 + GetUnitId(_textureIdx));
+    }
     extraFuncs->glBindTexture(GL_TEXTURE_2D, GetHandle(_textureIdx));
 }
 
@@ -121,6 +128,8 @@ void Texture::Construct(const std::vector<TextureData> &_dataForTextures, unsign
         // Setting to GL_NEAREST, seems to be desirable for render target applications.
         extraFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, storedDataAtIdx.m_filterParam);
         extraFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, storedDataAtIdx.m_filterParam);
+        extraFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        extraFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         // Unbind
         extraFuncs->glBindTexture(GL_TEXTURE_2D, 0);

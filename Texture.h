@@ -44,7 +44,7 @@ public:
     Texture(const QString& _imageFileName, TextureData::FilterParam _filterParam, unsigned int _textureIdOffset = 0);
     ~Texture();
 
-    void Bind(size_t _textureIdx = 0) const;
+    void Bind(size_t _textureIdx = 0, size_t* _unitId = nullptr) const;
     void CleanUp();
 
     size_t GetNumTextures() const { return m_numTextures; }
