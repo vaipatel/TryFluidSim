@@ -173,19 +173,26 @@ void FluidSimWindow::SetupTextures()
     }
 }
 
-void FluidSimWindow::Advect(DoubleRenderTargetBuffer* _doubleBuffer, Texture* _velTex, float _dt)
+void FluidSimWindow::Advect(DoubleRenderTargetBuffer* _doubleBuffer, float _dt)
 {
     // Bind advect shader program
     m_advectProgram->Bind();
 
-    // Pass buffer texture to read from
+    // Pass quantity to be advected
     Texture* textureToBeAdvected = _doubleBuffer->GetFirst()->GetTargetTexture();
-    textureToBeAdvected->Bind();
-    m_advectProgram->SetUniform("uSource", static_cast<int>(textureToBeAdvected->GetUnitId()));
+    size_t textureToBeAdvectedUnitId = 0;
+    textureToBeAdvected->Bind(0, &textureToBeAdvectedUnitId);
+    m_advectProgram->SetUniform("uSource", static_cast<int>(textureToBeAdvectedUnitId));
 
     // Pass velocity buffer
-    _velTex->Bind();
-    m_advectProgram->SetUniform("uVelocity", static_cast<int>(_velTex->GetUnitId()));
+    Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
+    size_t velTexUnitId = 0;
+    if ( _doubleBuffer != m_velocityDoubleTargetBuffer )
+    {
+        velTexUnitId = 1; // If advected quantity is not velocity itself, bind velocity to different texture unit
+    }
+    velTex->Bind(0, &velTexUnitId);
+    m_advectProgram->SetUniform("uVelocity", static_cast<int>(velTexUnitId));
 
     // Pass time
     m_advectProgram->SetUniform("dt", _dt);
@@ -213,8 +220,9 @@ void FluidSimWindow::Splat(float _x, float _y, float _dx, float _dy, const QVect
 
     // Pass first velocity buffer's texture
     Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
-    velTex->Bind();
-    m_splatForceProgram->SetUniform("uSource", static_cast<int>(velTex->GetUnitId()));
+    size_t velTexUnitId = 0;
+    velTex->Bind(0, &velTexUnitId);
+    m_splatForceProgram->SetUniform("uSource", static_cast<int>(velTexUnitId));
 
     // Pass other params
     m_splatForceProgram->SetUniform("aspectRatio", m_viewAspect);
@@ -231,8 +239,9 @@ void FluidSimWindow::Splat(float _x, float _y, float _dx, float _dy, const QVect
 
     // Pass first dye buffer's texture
     Texture* dyeTex = m_dyeDoubleTargetBuffer->GetFirst()->GetTargetTexture();
-    dyeTex->Bind();
-    m_splatForceProgram->SetUniform("uSource", static_cast<int>(dyeTex->GetUnitId()));
+    size_t dyeTexUnitId = 1;
+    dyeTex->Bind(0, &dyeTexUnitId);
+    m_splatForceProgram->SetUniform("uSource", static_cast<int>(dyeTexUnitId));
 
     // Pass the color
     m_splatForceProgram->SetUniform("color", _color);
@@ -253,8 +262,9 @@ void FluidSimWindow::ComputeDivergence()
 
     // Pass first velocity buffer's texture
     Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
-    velTex->Bind();
-    m_divergenceProgram->SetUniform("uVelocity", static_cast<int>(velTex->GetUnitId()));
+    size_t velTexUnitId = 0;
+    velTex->Bind(0, &velTexUnitId);
+    m_divergenceProgram->SetUniform("uVelocity", static_cast<int>(velTexUnitId));
 
     // Pass cell size
     m_divergenceProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
@@ -270,8 +280,9 @@ void FluidSimWindow::SolvePressure()
 
     // Pass divergence texture
     Texture* divTex = m_divergenceTargetBuffer->GetTargetTexture();
-    divTex->Bind();
-    m_pressureSolveProgram->SetUniform("uDivergence", static_cast<int>(divTex->GetUnitId()));
+    size_t divTexUnitId = 0;
+    divTex->Bind(0, &divTexUnitId);
+    m_pressureSolveProgram->SetUniform("uDivergence", static_cast<int>(divTexUnitId));
 
     // Pass cell size
     m_pressureSolveProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
@@ -280,8 +291,9 @@ void FluidSimWindow::SolvePressure()
     {
         // Pass curr pressure texture
         Texture* pressureTex = m_pressureDoubleTargetBuffer->GetFirst()->GetTargetTexture();
-        pressureTex->Bind();
-        m_pressureSolveProgram->SetUniform("uPressure", static_cast<int>(pressureTex->GetUnitId()));
+        size_t pressureTexUnitId = 1;
+        pressureTex->Bind(0, &pressureTexUnitId);
+        m_pressureSolveProgram->SetUniform("uPressure", static_cast<int>(pressureTexUnitId));
 
         m_blitter->BlitToTarget(m_pressureDoubleTargetBuffer->GetSecond());
 

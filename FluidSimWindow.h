@@ -30,7 +30,7 @@ protected:
 private:
     void CleanUpTextures();
     void SetupTextures();
-    void Advect(DoubleRenderTargetBuffer* _doubleBuffer, Texture *_velTex, float _dt);
+    void Advect(DoubleRenderTargetBuffer* _doubleBuffer, float _dt);
     void Splat(float _x, float _y, float _dx, float _dy, const QVector3D& _color);
     void ComputeDivergence();
     void SolvePressure();

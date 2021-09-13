@@ -47,9 +47,9 @@ void Blitter::DrawTextureOnScreenQuad(const Texture* _texture, size_t _texIdx)
     m_screenProgram->Bind();
 
     // Bind texture at m_handles[1] to context
-    _texture->Bind(_texIdx);
-    int texUnitId = static_cast<int>(_texture->GetUnitId(_texIdx));
-    m_screenProgram->SetUniform("screenTexture", texUnitId); // Bind texture unit GL_TEXTURE0 + texUnitId of bound texture as uniform
+    size_t texUnitId = 0;
+    _texture->Bind(_texIdx, &texUnitId);
+    m_screenProgram->SetUniform("screenTexture", static_cast<int>(texUnitId)); // Bind texture unit GL_TEXTURE0 + texUnitId of bound texture as uniform
 
     m_quad->Draw();
 
