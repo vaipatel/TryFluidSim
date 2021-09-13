@@ -73,7 +73,7 @@ private:
     float m_texelSizeX = 0.0f;
     float m_texelSizeY = 0.0f;
     const int SIM_RES = 128;
-    const float SPLAT_FORCE = 100;
+    const float SPLAT_FORCE = 16000;
     std::list<QVector2D> m_mousePosList;
 };
 

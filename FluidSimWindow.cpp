@@ -196,7 +196,12 @@ void FluidSimWindow::Advect(DoubleRenderTargetBuffer* _doubleBuffer, float _dt)
     m_advectProgram->SetUniform("dt", _dt);
 
     // Pass dissipation
-    m_advectProgram->SetUniform("dissipation", 0.5f);
+    float dissipation = 0.7f;
+    if ( _doubleBuffer != m_velocityDoubleTargetBuffer )
+    {
+        dissipation = 1.f;
+    }
+    m_advectProgram->SetUniform("dissipation", dissipation);
 
     // Pass cell size
     m_advectProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
@@ -226,7 +231,7 @@ void FluidSimWindow::Splat(float _x, float _y, float _dx, float _dy, const QVect
     m_splatForceProgram->SetUniform("aspectRatio", m_viewAspect);
     m_splatForceProgram->SetUniform("color", QVector3D(_dx, _dy, 0.0f));
     m_splatForceProgram->SetUniform("point", QVector2D(_x, _y));
-    m_splatForceProgram->SetUniform("radius", 0.25f / 100.0f);
+    m_splatForceProgram->SetUniform("radius", 0.25f / 320.0f);
     m_splatForceProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
 
     // Blit result onto second velocity buffer
@@ -285,7 +290,7 @@ void FluidSimWindow::SolvePressure()
     // Pass cell size
     m_pressureSolveProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
 
-    for (size_t i = 0; i < 2; i++)
+    for (size_t i = 0; i < 20; i++)
     {
         // Pass curr pressure texture
         Texture* pressureTex = m_pressureDoubleTargetBuffer->GetFirst()->GetTargetTexture();
