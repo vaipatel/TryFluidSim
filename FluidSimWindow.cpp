@@ -142,7 +142,7 @@ void FluidSimWindow::CleanUpTextures()
 void FluidSimWindow::SetupTextures()
 {
     m_velocityOutTextureA = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 0);
-    m_velocityOutTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 1);
+    m_velocityOutTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 0);
     m_velocityDoubleTargetBuffer = new DoubleRenderTargetBuffer(m_velocityOutTextureA, m_velocityOutTextureB);
     std::vector<RenderTargetBuffer*> velocityBuffers = m_velocityDoubleTargetBuffer->GetBoth();
     foreach (RenderTargetBuffer* velocityBuffer, velocityBuffers)
@@ -151,7 +151,7 @@ void FluidSimWindow::SetupTextures()
     }
 
     m_dyeTextureA = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 0);
-    m_dyeTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 1);
+    m_dyeTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 0);
     m_dyeDoubleTargetBuffer = new DoubleRenderTargetBuffer(m_dyeTextureA, m_dyeTextureB);
     std::vector<RenderTargetBuffer*> dyeBuffers = m_dyeDoubleTargetBuffer->GetBoth();
     foreach (RenderTargetBuffer* dyeBuffer, dyeBuffers)
@@ -159,12 +159,12 @@ void FluidSimWindow::SetupTextures()
         ConfigureRenderTarget(dyeBuffer);
     }
 
-    m_divergenceTexture = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 0);
+    m_divergenceTexture = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::NEAREST, nullptr, 0);
     m_divergenceTargetBuffer = new RenderTargetBuffer(m_divergenceTexture);
     ConfigureRenderTarget(m_divergenceTargetBuffer);
 
-    m_pressureTextureA = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 0);
-    m_pressureTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::LINEAR, nullptr, 1);
+    m_pressureTextureA = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::NEAREST, nullptr, 0);
+    m_pressureTextureB = new Texture(m_viewWidth, m_viewHeight, GL_RGBA, GL_FLOAT, TextureData::FilterParam::NEAREST, nullptr, 0);
     m_pressureDoubleTargetBuffer =  new DoubleRenderTargetBuffer(m_pressureTextureA, m_pressureTextureB);
     std::vector<RenderTargetBuffer*> pressureBuffers = m_pressureDoubleTargetBuffer->GetBoth();
     foreach(RenderTargetBuffer* pressureBuffer, pressureBuffers)
