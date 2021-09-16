@@ -1,12 +1,14 @@
 #include "FluidSimWindow.h"
 #include "Blitter.h"
 #include "DoubleRenderTargetBuffer.h"
+#include "PointsObject.h"
 #include "RenderTargetBuffer.h"
 #include "ShaderProgram.h"
 #include "Shared.h"
 #include "Texture.h"
 #include "TrisObject.h"
 #include <QDebug>
+#include <QKeyEvent>
 #include <QMouseEvent>
 #include <QScreen>
 #include <QVector2D>
@@ -36,6 +38,8 @@ FluidSimWindow::~FluidSimWindow()
     delete m_divergenceProgram;
     delete m_pressureSolveProgram;
     delete m_gradientSubtractProgram;
+    delete m_vectorsProgram;
+    delete m_vectors;
 }
 
 void FluidSimWindow::initialize()
@@ -50,8 +54,10 @@ void FluidSimWindow::initialize()
     m_divergenceProgram = new ShaderProgram(m_baseVertShaderFileName, m_divergenceFragShaderFileName);
     m_pressureSolveProgram = new ShaderProgram(m_baseVertShaderFileName, m_pressureSolveFragShaderFileName);
     m_gradientSubtractProgram = new ShaderProgram(m_baseVertShaderFileName, m_gradientSubtractFragShaderFileName);
+    m_vectorsProgram = new ShaderProgram(m_vectorsVertShaderFileName, m_vectorsGeomShaderFileName, m_vectorsFragShaderFileName);
 
     SetupTextures();
+    SetupParticles();
 }
 
 void FluidSimWindow::render()
@@ -93,6 +99,9 @@ void FluidSimWindow::render()
 
     m_blitter->BindTarget(nullptr);
     m_blitter->DrawTextureOnScreenQuad(m_dyeDoubleTargetBuffer->GetFirst()->GetTargetTexture());
+
+    // Draw vector field if needed
+    DrawVectors();
 }
 
 void FluidSimWindow::cleanup()
@@ -119,6 +128,14 @@ void FluidSimWindow::mouseMoveEvent(QMouseEvent* _ev)
         float x = static_cast<float>(_ev->x()) / static_cast<float>(width());
         float y = 1.0f - static_cast<float>(_ev->y()) / static_cast<float>(height());
         m_mousePosList.push_back({x, y});
+    }
+}
+
+void FluidSimWindow::keyPressEvent(QKeyEvent* _ev)
+{
+    if ( _ev->key() == Qt::Key_V )
+    {
+        m_showVectors = !m_showVectors;
     }
 }
 
@@ -169,6 +186,28 @@ void FluidSimWindow::SetupTextures()
     {
         ConfigureRenderTarget(pressureBuffer);
     }
+}
+
+void FluidSimWindow::SetupParticles()
+{
+    size_t numParticlesX = 96;
+    size_t numParticlesY = 96;
+    float cellSizeX = 2.0f / static_cast<float>(numParticlesX);
+    float cellSizeY = 2.0f / static_cast<float>(numParticlesY);
+    float startX = -1.0f;
+    float startY = -1.0f;
+    std::vector<Point> m_particlePts;
+    for (size_t i = 0; i < numParticlesX; i++)
+    {
+        for (size_t j = 0; j < numParticlesY; j++)
+        {
+            float x = startX + (static_cast<float>(i) + 0.5f) * cellSizeX;
+            float y = startY + (static_cast<float>(j) + 0.5f) * cellSizeY;
+            m_particlePts.push_back({x, y, 0.0f});
+        }
+    }
+
+    m_vectors = new PointsObject(m_particlePts);
 }
 
 void FluidSimWindow::Advect(DoubleRenderTargetBuffer* _doubleBuffer, float _dt)
@@ -232,7 +271,6 @@ void FluidSimWindow::Splat(float _x, float _y, float _dx, float _dy, const QVect
     m_splatForceProgram->SetUniform("color", QVector3D(_dx, _dy, 0.0f));
     m_splatForceProgram->SetUniform("point", QVector2D(_x, _y));
     m_splatForceProgram->SetUniform("radius", 0.25f / 320.0f);
-    m_splatForceProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
 
     // Blit result onto second velocity buffer
     m_blitter->BlitToTarget(m_velocityDoubleTargetBuffer->GetSecond());
@@ -290,7 +328,7 @@ void FluidSimWindow::SolvePressure()
     // Pass cell size
     m_pressureSolveProgram->SetUniform("texelSize", {m_texelSizeX, m_texelSizeY});
 
-    for (size_t i = 0; i < 20; i++)
+    for (size_t i = 0; i < 40; i++)
     {
         // Pass curr pressure texture
         Texture* pressureTex = m_pressureDoubleTargetBuffer->GetFirst()->GetTargetTexture();
@@ -330,6 +368,24 @@ void FluidSimWindow::SubtractGradient()
     m_velocityDoubleTargetBuffer->SwapBuffers();
 
     m_gradientSubtractProgram->Release();
+}
+
+void FluidSimWindow::DrawVectors()
+{
+    if ( m_showVectors )
+    {
+        m_vectorsProgram->Bind();
+
+        // Pass first velocity buffer's texture
+        Texture* velTex = m_velocityDoubleTargetBuffer->GetFirst()->GetTargetTexture();
+        size_t velTexUnitId = 0;
+        velTex->Bind(0, &velTexUnitId);
+        m_vectorsProgram->SetUniform("uSource", static_cast<int>(velTexUnitId));
+
+        m_vectors->Draw();
+
+        m_vectorsProgram->Release();
+    }
 }
 
 void FluidSimWindow::ConfigureRenderTarget(RenderTargetBuffer* _renderTarget)

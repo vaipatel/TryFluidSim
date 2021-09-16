@@ -19,13 +19,19 @@ ShaderProgram::ShaderProgram(const QString& _vertexShaderFileName, const QString
     canAddShaders &= m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, _fragmentShaderFileName);
     Q_ASSERT(canAddShaders);
 
-    foreach (enVSAttrIdx attrIdx, s_VS_ATTR_NAMES.keys())
-    {
-        m_program->bindAttributeLocation(s_VS_ATTR_NAMES[attrIdx].m_attrName.toUtf8().constData(), static_cast<int>(attrIdx));
-    }
+    CommonCtorSetup();
+}
 
-    bool canLink = m_program->link();
-    Q_ASSERT(canLink);
+ShaderProgram::ShaderProgram(const QString& _vertexShaderFileName, const QString& _geometryShaderFileName, const QString& _fragmentShaderFileName)
+{
+    m_program = new QOpenGLShaderProgram;
+
+    bool canAddShaders = m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, _vertexShaderFileName);
+    canAddShaders &= m_program->addShaderFromSourceFile(QOpenGLShader::Geometry, _geometryShaderFileName);
+    canAddShaders &= m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, _fragmentShaderFileName);
+    Q_ASSERT(canAddShaders);
+
+    CommonCtorSetup();
 }
 
 ShaderProgram::~ShaderProgram()
@@ -124,4 +130,15 @@ void ShaderProgram::Bind()
 void ShaderProgram::Release()
 {
     m_program->release();
+}
+
+void ShaderProgram::CommonCtorSetup()
+{
+    foreach (enVSAttrIdx attrIdx, s_VS_ATTR_NAMES.keys())
+    {
+        m_program->bindAttributeLocation(s_VS_ATTR_NAMES[attrIdx].m_attrName.toUtf8().constData(), static_cast<int>(attrIdx));
+    }
+
+    bool canLink = m_program->link();
+    Q_ASSERT(canLink);
 }

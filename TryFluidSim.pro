@@ -55,6 +55,9 @@ DISTFILES += \
     Resources/Shaders/FluidGradientSubtract.frag \
     Resources/Shaders/FluidPressureSolve.frag \
     Resources/Shaders/FluidSplatForce.frag \
+    Resources/Shaders/FluidVectors.frag \
+    Resources/Shaders/FluidVectors.geom \
+    Resources/Shaders/FluidVectors.vert \
     Resources/Shaders/Perlin.frag \
     Resources/Shaders/Perlin.vert \
     Resources/Shaders/RotTexturedTri.frag \

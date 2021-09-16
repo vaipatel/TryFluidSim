@@ -18,5 +18,8 @@
         <file>Resources/Shaders/FluidDivergence.frag</file>
         <file>Resources/Shaders/FluidPressureSolve.frag</file>
         <file>Resources/Shaders/FluidGradientSubtract.frag</file>
+        <file>Resources/Shaders/FluidVectors.vert</file>
+        <file>Resources/Shaders/FluidVectors.geom</file>
+        <file>Resources/Shaders/FluidVectors.frag</file>
     </qresource>
 </RCC>

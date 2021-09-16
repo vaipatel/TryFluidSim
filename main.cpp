@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 #if EXPERIMENT_NAME == FLUID
     FluidSimWindow fluidSimWindow;
     fluidSimWindow.setFormat(format);
-    fluidSimWindow.resize(240, 240);
+    fluidSimWindow.resize(1024, 1024);
     fluidSimWindow.show();
     fluidSimWindow.setAnimating(true);
 #endif

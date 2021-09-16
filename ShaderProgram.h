@@ -28,6 +28,7 @@ public:
     static const QMap<enVSAttrIdx, VSAttrData> s_VS_ATTR_NAMES;
 
     ShaderProgram(const QString& _vertexShaderFileName, const QString& _fragmentShaderFileName);
+    ShaderProgram(const QString& _vertexShaderFileName, const QString& _geometryShaderFileName, const QString& _fragmentShaderFileName);
     ~ShaderProgram();
 
     unsigned int GetAttributeLocation(const QString& _attrName) const;
@@ -50,6 +51,8 @@ public:
     void Release();
 
 private:
+    void CommonCtorSetup();
+
     QOpenGLShaderProgram* m_program;
 };
 
