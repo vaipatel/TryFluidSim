@@ -14,6 +14,7 @@ SOURCES += \
     FluidSimWindow.cpp \
     ImageTextureWindow.cpp \
     OpenGLWindow.cpp \
+    PointsObject.cpp \
     RenderTargetBuffer.cpp \
     ShaderProgram.cpp \
     Shared.cpp \
@@ -28,6 +29,7 @@ HEADERS += \
     FluidSimWindow.h \
     ImageTextureWindow.h \
     OpenGLWindow.h \
+    PointsObject.h \
     RenderTargetBuffer.h \
     ShaderProgram.h \
     Shared.h \
