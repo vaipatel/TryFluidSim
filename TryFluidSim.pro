@@ -18,6 +18,7 @@ SOURCES += \
     RenderTargetBuffer.cpp \
     ShaderProgram.cpp \
     Shared.cpp \
+    SpectrogramWindow.cpp \
     Texture.cpp \
     TriangleRotWindow.cpp \
     TrisObject.cpp \
@@ -33,6 +34,7 @@ HEADERS += \
     RenderTargetBuffer.h \
     ShaderProgram.h \
     Shared.h \
+    SpectrogramWindow.h \
     Texture.h \
     TriangleRotWindow.h \
     TrisObject.h

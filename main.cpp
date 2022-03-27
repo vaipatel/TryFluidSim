@@ -1,12 +1,14 @@
 #include "TriangleRotWindow.h"
 #include "ImageTextureWindow.h"
 #include "FluidSimWindow.h"
+#include "SpectrogramWindow.h"
 #include <QApplication>
 
-#define TRIROT 0
-#define PERLIN 1
-#define FLUID 2
-#define EXPERIMENT_NAME FLUID
+#define TRIROT      0
+#define PERLIN      1
+#define FLUID       2
+#define SPECTROGRAM 3
+#define EXPERIMENT_NAME SPECTROGRAM
 
 
 int main(int argc, char *argv[])
@@ -42,6 +44,14 @@ int main(int argc, char *argv[])
     fluidSimWindow.resize(1024, 1024);
     fluidSimWindow.show();
     fluidSimWindow.setAnimating(true);
+#endif
+
+#if EXPERIMENT_NAME == SPECTROGRAM
+    SpectrogramWindow spectrogramWindow;
+    spectrogramWindow.setFormat(format);
+    spectrogramWindow.resize(512, 512);
+    spectrogramWindow.show();
+    spectrogramWindow.setAnimating(true);
 #endif
 
     return app.exec();
