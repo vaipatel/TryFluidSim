@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -11,6 +11,7 @@ CONFIG += c++11
 SOURCES += \
     Blitter.cpp \
     DoubleRenderTargetBuffer.cpp \
+    FluidEqualizerWindow.cpp \
     FluidSimWindow.cpp \
     ImageTextureWindow.cpp \
     OpenGLWindow.cpp \
@@ -27,6 +28,7 @@ SOURCES += \
 HEADERS += \
     Blitter.h \
     DoubleRenderTargetBuffer.h \
+    FluidEqualizerWindow.h \
     FluidSimWindow.h \
     ImageTextureWindow.h \
     OpenGLWindow.h \

@@ -1,14 +1,16 @@
 #include "TriangleRotWindow.h"
 #include "ImageTextureWindow.h"
 #include "FluidSimWindow.h"
+#include "FluidEqualizerWindow.h"
 #include "SpectrogramWindow.h"
 #include <QApplication>
 
 #define TRIROT      0
 #define PERLIN      1
 #define FLUID       2
-#define SPECTROGRAM 3
-#define EXPERIMENT_NAME SPECTROGRAM
+#define FLUID_EQ    3
+#define SPECTROGRAM 4
+#define EXPERIMENT_NAME FLUID_EQ
 
 
 int main(int argc, char *argv[])
@@ -44,6 +46,14 @@ int main(int argc, char *argv[])
     fluidSimWindow.resize(1024, 1024);
     fluidSimWindow.show();
     fluidSimWindow.setAnimating(true);
+#endif
+
+#if EXPERIMENT_NAME == FLUID_EQ
+    FluidEqualizerWindow fluidEqWindow;
+    fluidEqWindow.setFormat(format);
+    fluidEqWindow.resize(1024, 1024);
+    fluidEqWindow.show();
+    fluidEqWindow.setAnimating(true);
 #endif
 
 #if EXPERIMENT_NAME == SPECTROGRAM

@@ -3,11 +3,11 @@
 
 #include <QWindow>
 #include <QOpenGLFunctions>
+#include <cassert>
 
 class QPainter;
 class QOpenGLContext;
 class QOpenGLPaintDevice;
-
 
 class OpenGLWindow : public QWindow, protected QOpenGLFunctions
 {
