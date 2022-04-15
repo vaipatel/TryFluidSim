@@ -17,6 +17,9 @@
 #include <QScreen>
 #include <QVector2D>
 #include <QVector3D>
+#include <algorithm>
+#include <math.h>
+#include "DspFilters/ChebyshevI.h"
 
 FluidEqualizerWindow::FluidEqualizerWindow(QWindow* _parent) : OpenGLWindow(_parent)
 {
@@ -84,29 +87,48 @@ void FluidEqualizerWindow::render()
     {
         CreateFreeQueuesOfArraysWithArraySize(m_numSamplesPerChannel);
         m_freeQueueCreated = true;
+        m_maxPassBandHz = m_numSamplesPerChannel * 2.0;
     }
 
     int numFilledProcessed = 0;
-    while ( !m_filledQueue.empty() && numFilledProcessed < 5 )
+    const int MAX_NUM_FILLED_PROCESSED = 1;
+    while ( !m_filledQueue.empty() && numFilledProcessed < MAX_NUM_FILLED_PROCESSED )
     {
         CArray& audioData = *m_filledQueue.front();
         m_filledQueue.pop_front();
 
-        size_t numSamplesToPlot = 10;
+        std::vector<float> copiedVec;
+        std::transform(std::begin(audioData), std::end(audioData), std::back_inserter(copiedVec), [](std::complex<double> _c) -> float { return _c.real(); });
+        float* a[1] = { copiedVec.data() };
+        Dsp::SimpleFilter <Dsp::ChebyshevI::BandPass <3>, 1> f;
+        f.setup (3,           // order
+                 m_sampleRate,// sample rate
+                 m_passBandHz,// center frequency
+                 8000,         // band width
+                 10);          // ripple dB
+        f.process(static_cast<int>(audioData.size()), a);
+
+        size_t numSamplesToPlot = 4;
         size_t samplesStep = audioData.size() / numSamplesToPlot;
         double small_dtS = static_cast<double>(dtS) / static_cast<double>(numSamplesToPlot);
-        const double omega = 2.0 * PI * ConvertBPMToHz(108.0);
+        const double bpm = 108.0;
+        const double omega = 2.0 * PI * ConvertBPMToHz(bpm * 1);
+        const double radialLengthFactor = 1.0e-1;
 
         for (size_t idx = 0; idx < numSamplesToPlot; idx++ )
         {
             m_accumTimeS += small_dtS;
             size_t sampleIdx = idx * samplesStep;
+            double radialLength = std::abs(copiedVec[sampleIdx]) * radialLengthFactor;
+//            radialLength = tanh(radialLength) * 2.0e-1;
+            assert(radialLength < 1.0);
+            double audioVal = copiedVec[sampleIdx] * radialLengthFactor;
+            double radius = 0.25 + audioVal;
 
-            double magnitude = 0.25;
             double angleRad = omega * static_cast<double>(m_accumTimeS);
-            double currEqX = 0.5 + magnitude * cos( angleRad );
-            double currEqY = 0.5 + magnitude * sin( angleRad );
-            QVector2D currXY(currEqX, currEqY);
+            double currEqX = 0.5 + radius * cos( angleRad );
+            double currEqY = 0.5 + radius * sin( angleRad );
+            QVector2D currXY(static_cast<float>(currEqX), static_cast<float>(currEqY));
             QVector2D delta;
             QVector2D velocity;
 
@@ -116,16 +138,33 @@ void FluidEqualizerWindow::render()
             }
             else
             {
-                delta = currXY - m_prevXY;
-                velocity = delta;//QVector2D(-magnitude * sin( angleRad ), magnitude * cos( angleRad )) * omega;
-                velocity = -velocity * 2e-1f;
+                delta = (currXY - m_prevXY); //- 5e-2 * QVector2D(radius * cos( angleRad ), radius * sin( angleRad )); // * (1.0f - 1e-2f) + QVector2D(-radius * sin( angleRad ), radius * cos( angleRad )) * omega * 1e-2f;
+                velocity = delta;
+                velocity = -velocity * 5e-1f / numSamplesToPlot;
 
-                size_t numSteps = 5;
+                size_t numSteps = 10;
                 float oneStep = static_cast<float>(1.0f)/numSteps;
-                for ( size_t step = 0; step < numSteps; step++ )
+                if ( m_doFwd )
                 {
-                    float deltaStep = static_cast<float>(numSteps - 1 - step)/numSteps;
-                    Splat(currXY.x() - deltaStep * delta.x(), currXY.y() - deltaStep * delta.y(), SPLAT_FORCE * velocity.x() * oneStep, SPLAT_FORCE * velocity.y() * oneStep, {static_cast<float>(magnitude), static_cast<float>(magnitude), 1.0});
+                    for ( size_t step = 0; step < numSteps; step++ )
+                    {
+                        float deltaStep = static_cast<float>(step)/numSteps;
+                        Splat(m_prevXY.x() + deltaStep * delta.x(), m_prevXY.y() + deltaStep * delta.y(), -SPLAT_FORCE * velocity.x() * oneStep, -SPLAT_FORCE * velocity.y() * oneStep,
+                              {static_cast<float>(std::abs(audioVal) / radialLengthFactor),
+                               static_cast<float>(audioVal / radialLengthFactor),
+                               static_cast<float>(m_passBandHz) / static_cast<float>(m_maxPassBandHz)});
+                    }
+                }
+                else
+                {
+                    for ( size_t step = 0; step < numSteps; step++ )
+                    {
+                        float deltaStep = static_cast<float>(numSteps - 1 - step)/numSteps;
+                        Splat(currXY.x() - deltaStep * delta.x(), currXY.y() - deltaStep * delta.y(), SPLAT_FORCE * velocity.x() * oneStep, SPLAT_FORCE * velocity.y() * oneStep,
+                              {static_cast<float>(std::abs(audioVal) / radialLengthFactor),
+                               static_cast<float>(audioVal / radialLengthFactor),
+                               static_cast<float>(m_passBandHz) / static_cast<float>(m_maxPassBandHz)});
+                    }
                 }
             }
 
@@ -135,6 +174,11 @@ void FluidEqualizerWindow::render()
         m_freeQueue.push_back(&audioData);
 
         numFilledProcessed++;
+
+//        if ( m_filledQueue.empty() && numFilledProcessed < MAX_NUM_FILLED_PROCESSED )
+//        {
+//            qDebug() << "VAIVAI WOW";
+//        }
     }
 
     // Add forces
@@ -210,6 +254,22 @@ void FluidEqualizerWindow::keyPressEvent(QKeyEvent* _ev)
     {
         m_showVectors = !m_showVectors;
     }
+    else if ( _ev->key() == Qt::Key_Up )
+    {
+        m_passBandHz += m_passBandIncrementHz;
+        m_passBandHz = std::max(m_minPassBandHz, std::min(m_passBandHz, m_maxPassBandHz));
+        qDebug() << "m_passBandHz" << m_passBandHz;
+    }
+    else if ( _ev->key() == Qt::Key_Down )
+    {
+        m_passBandHz -= m_passBandIncrementHz;
+        m_passBandHz = std::max(m_minPassBandHz, std::min(m_passBandHz, m_maxPassBandHz));
+        qDebug() << "m_passBandHz" << m_passBandHz;
+    }
+    else if ( _ev->key() == Qt::Key_F )
+    {
+        m_doFwd = !m_doFwd;
+    }
 }
 
 void FluidEqualizerWindow::SlotProcessAudioBuffer(const QAudioBuffer& _buffer)
@@ -231,14 +291,16 @@ void FluidEqualizerWindow::SlotProcessAudioBuffer(const QAudioBuffer& _buffer)
                 if ( _buffer.format().sampleType() == QAudioFormat::SignedInt )
                 {
                     assert(m_bytesPerSample == 2 * numChannels);
-                    assert(in->size() == m_numSamplesPerChannel);
-                    const qint16* data = _buffer.constData<qint16>();
-                    for (size_t i = 0; i < m_numSamplesPerChannel; i++)
+                    if (in->size() == m_numSamplesPerChannel)
                     {
-                        double val = static_cast<double>(data[i*numChannels]) / SHRT_MAX;
-                        (*in)[i] = val;
+                        const qint16* data = _buffer.constData<qint16>();
+                        for (size_t i = 0; i < m_numSamplesPerChannel; i++)
+                        {
+                            double val = static_cast<double>(data[i*numChannels]) / SHRT_MAX;
+                            (*in)[i] = val;
+                        }
+            //            FFT(*in);
                     }
-        //            FFT(*in);
                 }
                 m_filledQueue.push_back(in);
             }

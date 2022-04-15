@@ -124,6 +124,11 @@ private:
     bool m_startedTrail = false;
     double m_accumTimeS = 0;
     bool m_freeQueueCreated = false;
+    double m_minPassBandHz = 2000;
+    double m_maxPassBandHz = -1;
+    double m_passBandHz = m_minPassBandHz;
+    double m_passBandIncrementHz = 2000;
+    bool m_doFwd = false;
 };
 
 #endif // FLUIDEQUALIZERWINDOW_H
