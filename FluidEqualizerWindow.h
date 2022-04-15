@@ -62,6 +62,8 @@ private:
     void ConfigureRenderTarget(RenderTargetBuffer* _renderTarget);
     void FFT(CArray& _x);
     static double ConvertBPMToHz(double _bpm);
+    void ClearQueue(std::list<CArray*>& _queue);
+    void CreateFreeQueuesOfArraysWithArraySize(size_t _freeQueueFFTArraySize);
 
     const QString m_baseVertShaderFileName = ":/Resources/Shaders/FluidBaseVertexShader.vert";
     const QString m_advectFragShaderFileName = ":/Resources/Shaders/FluidAdvect.frag";
@@ -114,14 +116,14 @@ private:
     QMediaPlaylist* m_playlist = nullptr;
     std::list<CArray*> m_freeQueue;
     std::list<CArray*> m_filledQueue;
-    const size_t MAX_AUDIO_QUEUE_SIZE = 16000;
+    const size_t MAX_AUDIO_QUEUE_SIZE = 3000;
     int m_sampleRate = -1;
     int m_bytesPerSample = -1;
     size_t m_numSamplesPerChannel = 0;
-    double m_prevEqX = 0;
-    double m_prevEqY = 0;
+    QVector2D m_prevXY;
     bool m_startedTrail = false;
     double m_accumTimeS = 0;
+    bool m_freeQueueCreated = false;
 };
 
 #endif // FLUIDEQUALIZERWINDOW_H

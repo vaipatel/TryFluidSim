@@ -23,6 +23,8 @@ FluidEqualizerWindow::FluidEqualizerWindow(QWindow* _parent) : OpenGLWindow(_par
 
 }
 
+
+
 FluidEqualizerWindow::~FluidEqualizerWindow()
 {
     delete m_blitter;
@@ -46,19 +48,8 @@ FluidEqualizerWindow::~FluidEqualizerWindow()
     delete m_vectors;
     m_player->stop();
 
-    while ( !m_freeQueue.empty() )
-    {
-        CArray* buffer = m_freeQueue.front();
-        delete buffer;
-        m_freeQueue.pop_front();
-    }
-
-    while ( !m_filledQueue.empty() )
-    {
-        CArray* buffer = m_filledQueue.front();
-        delete buffer;
-        m_filledQueue.pop_front();
-    }
+    ClearQueue(m_freeQueue);
+    ClearQueue(m_filledQueue);
 }
 
 void FluidEqualizerWindow::initialize()
@@ -78,10 +69,7 @@ void FluidEqualizerWindow::initialize()
     m_player = new QMediaPlayer(this);
     m_playlist = new QMediaPlaylist(m_player);
     m_audioProbe = new QAudioProbe(this);
-    for ( size_t i = 0; i < MAX_AUDIO_QUEUE_SIZE; i++ )
-    {
-        m_freeQueue.push_back(new CArray);
-    }
+
 
     SetupAudio();
     SetupTextures();
@@ -91,48 +79,62 @@ void FluidEqualizerWindow::initialize()
 void FluidEqualizerWindow::render()
 {
     float dtS = static_cast<float>(1/(screen()->refreshRate()));
-    m_accumTimeS += static_cast<double>(dtS);
 
-    if ( !m_filledQueue.empty() )
+    if ( m_numSamplesPerChannel != 0 && !m_freeQueueCreated )
     {
-        CArray& fftOut = *m_filledQueue.front();
+        CreateFreeQueuesOfArraysWithArraySize(m_numSamplesPerChannel);
+        m_freeQueueCreated = true;
+    }
+
+    int numFilledProcessed = 0;
+    while ( !m_filledQueue.empty() && numFilledProcessed < 5 )
+    {
+        CArray& audioData = *m_filledQueue.front();
         m_filledQueue.pop_front();
 
-        double pickedFreqHz = 0.8 * m_sampleRate; // pick some high freq
-        size_t pickedSampleIdx = static_cast<size_t>((pickedFreqHz/m_sampleRate)) * m_numSamplesPerChannel;
-        double magnitude = std::abs(fftOut[pickedSampleIdx]) * 2e-3;
-        double angleRad = 2.0 * PI * ConvertBPMToHz(107.0 * 1e-1) * static_cast<double>(m_accumTimeS);
-        double currEqX = 0.5 + magnitude * cos( angleRad );
-        double currEqY = 0.5 + magnitude * sin( angleRad );
-        QVector2D delta;
-        if ( !m_startedTrail )
+        size_t numSamplesToPlot = 10;
+        size_t samplesStep = audioData.size() / numSamplesToPlot;
+        double small_dtS = static_cast<double>(dtS) / static_cast<double>(numSamplesToPlot);
+        const double omega = 2.0 * PI * ConvertBPMToHz(108.0);
+
+        for (size_t idx = 0; idx < numSamplesToPlot; idx++ )
         {
-            m_startedTrail = true;
+            m_accumTimeS += small_dtS;
+            size_t sampleIdx = idx * samplesStep;
+
+            double magnitude = 0.25;
+            double angleRad = omega * static_cast<double>(m_accumTimeS);
+            double currEqX = 0.5 + magnitude * cos( angleRad );
+            double currEqY = 0.5 + magnitude * sin( angleRad );
+            QVector2D currXY(currEqX, currEqY);
+            QVector2D delta;
+            QVector2D velocity;
+
+            if ( !m_startedTrail )
+            {
+                m_startedTrail = true;
+            }
+            else
+            {
+                delta = currXY - m_prevXY;
+                velocity = delta;//QVector2D(-magnitude * sin( angleRad ), magnitude * cos( angleRad )) * omega;
+                velocity = -velocity * 2e-1f;
+
+                size_t numSteps = 5;
+                float oneStep = static_cast<float>(1.0f)/numSteps;
+                for ( size_t step = 0; step < numSteps; step++ )
+                {
+                    float deltaStep = static_cast<float>(numSteps - 1 - step)/numSteps;
+                    Splat(currXY.x() - deltaStep * delta.x(), currXY.y() - deltaStep * delta.y(), SPLAT_FORCE * velocity.x() * oneStep, SPLAT_FORCE * velocity.y() * oneStep, {static_cast<float>(magnitude), static_cast<float>(magnitude), 1.0});
+                }
+            }
+
+            m_prevXY = currXY;
         }
-        else
-        {
-            delta = 0.4f * QVector2D(-magnitude * sin( angleRad ), magnitude * sin( angleRad )) + 0.6f * QVector2D(currEqX - m_prevEqX, currEqY - m_prevEqY);
-            delta = delta.normalized() * 1e-2f;
-        }
 
-        size_t numSteps = 20;
-        float oneStep = static_cast<float>(1.0f)/numSteps;
-        for ( size_t step = 0; step < numSteps; step ++ )
-        {
-            float deltaStep = static_cast<float>(step)/numSteps;
-            Splat(m_prevEqX + deltaStep * delta.x(), m_prevEqY + deltaStep * delta.y(), SPLAT_FORCE * delta.x() * oneStep, SPLAT_FORCE * delta.y() * oneStep, {static_cast<float>(magnitude), static_cast<float>(magnitude), 1.0});
-        }
+        m_freeQueue.push_back(&audioData);
 
-        m_prevEqX = currEqX;
-        m_prevEqY = currEqY;
-
-//        for (size_t i = 0; i < fftOut.size(); i+=5000 )
-//        {
-//            double freqHz = (static_cast<double>(i)/static_cast<double>(m_numSamplesPerChannel)) * m_sampleRate;
-//            qDebug() << std::abs(fftOut[i]);
-//        }
-
-        m_freeQueue.push_back(&fftOut);
+        numFilledProcessed++;
     }
 
     // Add forces
@@ -212,33 +214,39 @@ void FluidEqualizerWindow::keyPressEvent(QKeyEvent* _ev)
 
 void FluidEqualizerWindow::SlotProcessAudioBuffer(const QAudioBuffer& _buffer)
 {
-    m_sampleRate = _buffer.format().sampleRate();
-    m_bytesPerSample = _buffer.format().bytesPerFrame();
-    size_t numSamples = static_cast<size_t>(_buffer.sampleCount());
-    size_t numChannels = static_cast<size_t>(_buffer.format().channelCount());
-    m_numSamplesPerChannel = numSamples/numChannels;
-
-    if ( !m_freeQueue.empty() )
+    if ( _buffer.isValid() )
     {
-        CArray* in = m_freeQueue.front();
-        m_freeQueue.pop_front();
-        if ( _buffer.format().sampleType() == QAudioFormat::SignedInt )
+        m_sampleRate = _buffer.format().sampleRate();
+        m_bytesPerSample = _buffer.format().bytesPerFrame();
+        size_t numSamples = static_cast<size_t>(_buffer.sampleCount());
+        size_t numChannels = static_cast<size_t>(_buffer.format().channelCount());
+        m_numSamplesPerChannel = numSamples/numChannels;
+
+        if ( m_freeQueueCreated )
         {
-            assert(m_bytesPerSample == 4);
-            const qint32* data = _buffer.constData<qint32>();
-
-            in->resize(m_numSamplesPerChannel, 0);
-            for (size_t i = 0; i < m_numSamplesPerChannel; i++)
+            if ( !m_freeQueue.empty() )
             {
-                (*in)[i] = static_cast<double>(data[i*numChannels]) / INT_MAX;
+                CArray* in = m_freeQueue.front();
+                m_freeQueue.pop_front();
+                if ( _buffer.format().sampleType() == QAudioFormat::SignedInt )
+                {
+                    assert(m_bytesPerSample == 2 * numChannels);
+                    assert(in->size() == m_numSamplesPerChannel);
+                    const qint16* data = _buffer.constData<qint16>();
+                    for (size_t i = 0; i < m_numSamplesPerChannel; i++)
+                    {
+                        double val = static_cast<double>(data[i*numChannels]) / SHRT_MAX;
+                        (*in)[i] = val;
+                    }
+        //            FFT(*in);
+                }
+                m_filledQueue.push_back(in);
             }
-            FFT(*in);
+            else
+            {
+                qDebug() << "VAIVAI OMG!";
+            }
         }
-        m_filledQueue.push_back(in);
-    }
-    else
-    {
-        qDebug() << "VAIVAI OMG!";
     }
 }
 
@@ -545,5 +553,24 @@ void FluidEqualizerWindow::FFT(CArray& _x)
 double FluidEqualizerWindow::ConvertBPMToHz(double _bpm)
 {
     return _bpm * (1.0/60.0);
+}
+
+void FluidEqualizerWindow::ClearQueue(std::list<CArray*>& _queue)
+{
+    while ( !_queue.empty() )
+    {
+        CArray* buffer = _queue.front();
+        delete buffer;
+        _queue.pop_front();
+    }
+}
+
+void FluidEqualizerWindow::CreateFreeQueuesOfArraysWithArraySize(size_t _freeQueueFFTArraySize)
+{
+    ClearQueue(m_freeQueue);
+    for ( size_t i = 0; i < MAX_AUDIO_QUEUE_SIZE; i++ )
+    {
+        m_freeQueue.push_back(new CArray(_freeQueueFFTArraySize));
+    }
 }
 
