@@ -111,7 +111,7 @@ void FluidEqualizerWindow::render()
         size_t numSamplesToPlot = 4;
         size_t samplesStep = audioData.size() / numSamplesToPlot;
         double small_dtS = static_cast<double>(dtS) / static_cast<double>(numSamplesToPlot);
-        const double bpm = 108.0;
+        const double bpm = 107.0;
         const double omega = 2.0 * PI * ConvertBPMToHz(bpm * 1);
         const double radialLengthFactor = 1.0e-1;
 
@@ -140,7 +140,7 @@ void FluidEqualizerWindow::render()
             {
                 delta = (currXY - m_prevXY); //- 5e-2 * QVector2D(radius * cos( angleRad ), radius * sin( angleRad )); // * (1.0f - 1e-2f) + QVector2D(-radius * sin( angleRad ), radius * cos( angleRad )) * omega * 1e-2f;
                 velocity = delta;
-                velocity = -velocity * 5e-1f / numSamplesToPlot;
+                velocity = velocity * 5e-1f / numSamplesToPlot;
 
                 size_t numSteps = 10;
                 float oneStep = static_cast<float>(1.0f)/numSteps;
@@ -148,8 +148,8 @@ void FluidEqualizerWindow::render()
                 {
                     for ( size_t step = 0; step < numSteps; step++ )
                     {
-                        float deltaStep = static_cast<float>(step)/numSteps;
-                        Splat(m_prevXY.x() + deltaStep * delta.x(), m_prevXY.y() + deltaStep * delta.y(), -SPLAT_FORCE * velocity.x() * oneStep, -SPLAT_FORCE * velocity.y() * oneStep,
+                        float deltaStep = static_cast<float>(step)/static_cast<float>(numSteps);
+                        Splat(m_prevXY.x() + deltaStep * delta.x(), m_prevXY.y() + deltaStep * delta.y(), SPLAT_FORCE * velocity.x() * oneStep, SPLAT_FORCE * velocity.y() * oneStep,
                               {static_cast<float>(std::abs(audioVal) / radialLengthFactor),
                                static_cast<float>(audioVal / radialLengthFactor),
                                static_cast<float>(m_passBandHz) / static_cast<float>(m_maxPassBandHz)});
@@ -159,8 +159,8 @@ void FluidEqualizerWindow::render()
                 {
                     for ( size_t step = 0; step < numSteps; step++ )
                     {
-                        float deltaStep = static_cast<float>(numSteps - 1 - step)/numSteps;
-                        Splat(currXY.x() - deltaStep * delta.x(), currXY.y() - deltaStep * delta.y(), SPLAT_FORCE * velocity.x() * oneStep, SPLAT_FORCE * velocity.y() * oneStep,
+                        float deltaStep = static_cast<float>(numSteps - 1 - step)/static_cast<float>(numSteps);
+                        Splat(currXY.x() - deltaStep * delta.x(), currXY.y() - deltaStep * delta.y(), -SPLAT_FORCE * velocity.x() * oneStep, -SPLAT_FORCE * velocity.y() * oneStep,
                               {static_cast<float>(std::abs(audioVal) / radialLengthFactor),
                                static_cast<float>(audioVal / radialLengthFactor),
                                static_cast<float>(m_passBandHz) / static_cast<float>(m_maxPassBandHz)});
