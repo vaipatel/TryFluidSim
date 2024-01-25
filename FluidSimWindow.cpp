@@ -81,7 +81,7 @@ void FluidSimWindow::render()
                 delta = m_mousePosList.front() - mousePos;
             }
 
-            Splat(mousePos.x(), mousePos.y(), SPLAT_FORCE * delta.x(), SPLAT_FORCE * delta.y(), {1.0f, 0.0, 1.0});
+            Splat(mousePos.x(), mousePos.y(), SPLAT_FORCE * delta.x(), SPLAT_FORCE * delta.y(), {1.0f*(0.5f + 0.5f*sin(2.0f*3.14159f*dtS)), (0.2f + 0.2f*cos(2.0f*3.14159f*1.3f*dtS)), (0.5f + 0.5f*cos(2.0f*3.14159f*20.0f*dtS))});
         }
     }
 
@@ -270,7 +270,7 @@ void FluidSimWindow::Splat(float _x, float _y, float _dx, float _dy, const QVect
     m_splatForceProgram->SetUniform("aspectRatio", m_viewAspect);
     m_splatForceProgram->SetUniform("color", QVector3D(_dx, _dy, 0.0f));
     m_splatForceProgram->SetUniform("point", QVector2D(_x, _y));
-    m_splatForceProgram->SetUniform("radius", 0.25f / 320.0f);
+    m_splatForceProgram->SetUniform("radius", 0.25f / 1024.0f);
 
     // Blit result onto second velocity buffer
     m_blitter->BlitToTarget(m_velocityDoubleTargetBuffer->GetSecond());

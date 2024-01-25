@@ -21,5 +21,6 @@
         <file>Resources/Shaders/FluidVectors.vert</file>
         <file>Resources/Shaders/FluidVectors.geom</file>
         <file>Resources/Shaders/FluidVectors.frag</file>
+        <file>Resources/Images/Credits.md</file>
     </qresource>
 </RCC>

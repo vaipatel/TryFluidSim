@@ -10,7 +10,7 @@
 #define FLUID       2
 #define FLUID_EQ    3
 #define SPECTROGRAM 4
-#define EXPERIMENT_NAME FLUID_EQ
+#define EXPERIMENT_NAME FLUID
 
 
 int main(int argc, char *argv[])
