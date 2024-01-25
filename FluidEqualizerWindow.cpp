@@ -97,21 +97,21 @@ void FluidEqualizerWindow::render()
         CArray& audioData = *m_filledQueue.front();
         m_filledQueue.pop_front();
 
-        std::vector<float> copiedVec;
-        std::transform(std::begin(audioData), std::end(audioData), std::back_inserter(copiedVec), [](std::complex<double> _c) -> float { return _c.real(); });
-        float* a[1] = { copiedVec.data() };
+        std::vector<float> filteredSignal;
+        std::transform(std::begin(audioData), std::end(audioData), std::back_inserter(filteredSignal), [](std::complex<double> _c) -> float { return _c.real(); });
+        float* a[1] = { filteredSignal.data() };
         Dsp::SimpleFilter <Dsp::ChebyshevI::BandPass <3>, 1> f;
         f.setup (3,           // order
                  m_sampleRate,// sample rate
                  m_passBandHz,// center frequency
-                 8000,         // band width
-                 10);          // ripple dB
+                 2200,         // band width
+                 0.001);          // ripple dB
         f.process(static_cast<int>(audioData.size()), a);
 
         size_t numSamplesToPlot = 4;
         size_t samplesStep = audioData.size() / numSamplesToPlot;
         double small_dtS = static_cast<double>(dtS) / static_cast<double>(numSamplesToPlot);
-        const double bpm = 107.0;
+        const double bpm = 120.0;
         const double omega = 2.0 * PI * ConvertBPMToHz(bpm * 1);
         const double radialLengthFactor = 1.0e-1;
 
@@ -119,10 +119,10 @@ void FluidEqualizerWindow::render()
         {
             m_accumTimeS += small_dtS;
             size_t sampleIdx = idx * samplesStep;
-            double radialLength = std::abs(copiedVec[sampleIdx]) * radialLengthFactor;
+            double radialLength = std::abs(filteredSignal[sampleIdx]) * radialLengthFactor;
 //            radialLength = tanh(radialLength) * 2.0e-1;
             assert(radialLength < 1.0);
-            double audioVal = copiedVec[sampleIdx] * radialLengthFactor;
+            double audioVal = filteredSignal[sampleIdx] * radialLengthFactor;
             double radius = 0.25 + audioVal;
 
             double angleRad = omega * static_cast<double>(m_accumTimeS);
@@ -142,7 +142,7 @@ void FluidEqualizerWindow::render()
                 velocity = delta;
                 velocity = velocity * 5e-1f / numSamplesToPlot;
 
-                size_t numSteps = 10;
+                size_t numSteps = 70;
                 float oneStep = static_cast<float>(1.0f)/numSteps;
                 if ( m_doFwd )
                 {
